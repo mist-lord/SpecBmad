@@ -8,7 +8,7 @@ import path from 'path';
 // 设置路径别名
 addAlias('@', path.join(__dirname));
 
-import { Command } from 'commander';
+import { Command, CommanderError } from 'commander';
 import chalk from 'chalk';
 import { config } from 'dotenv';
 import { log } from '@/utils/logger';
@@ -140,16 +140,27 @@ program.exitOverride();
 try {
   program.parse();
 } catch (error) {
-    if (error instanceof Error) {
-      // 忽略 outputHelp 相关的错误，这是正常行为
-      if (error.message.includes('outputHelp') || error.message.includes('help')) {
-        process.exit(0);
-      }
-      log.error(`命令执行失败: ${error.message}`);
-      const options = program.opts();
-      if (options['debug']) {
-        log.debug(error.stack || '无堆栈信息');
-      }
+  if (error instanceof CommanderError) {
+    // 对帮助与版本的正常展示使用 0 退出码
+    if (error.code === 'commander.helpDisplayed' || error.code === 'commander.version') {
+      process.exit(0);
+    }
+    // 其它 CommanderError：记录并按推荐退出码退出
+    log.error(`命令执行失败: ${error.message}`);
+    const options = program.opts();
+    if (options['debug']) {
+      log.debug(error.stack || '无堆栈信息');
+    }
+    process.exit(error.exitCode ?? 1);
+  } else if (error instanceof Error) {
+    // 非 CommanderError 的错误
+    log.error(`命令执行失败: ${error.message}`);
+    const options = program.opts();
+    if (options['debug']) {
+      log.debug(error.stack || '无堆栈信息');
     }
     process.exit(1);
+  } else {
+    process.exit(1);
   }
+}
