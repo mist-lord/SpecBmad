@@ -32,12 +32,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Spec-Kit/SpecBmad.git"
+    "url": "https://github.com/Alphabaijinde/SpecBmad.git"
   },
   "bugs": {
-    "url": "https://github.com/Spec-Kit/SpecBmad/issues"
+    "url": "https://github.com/Alphabaijinde/SpecBmad/issues"
   },
-  "homepage": "https://github.com/Spec-Kit/SpecBmad#readme",
+  "homepage": "https://github.com/Alphabaijinde/SpecBmad#readme",
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"
