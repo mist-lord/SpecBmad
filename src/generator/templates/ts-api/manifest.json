@@ -1,0 +1,12 @@
+{
+  "files": [
+    {
+      "path": "package.json",
+      "content": "{\n  \"name\": \"{{projectName}}\",\n  \"version\": \"0.1.0\",\n  \"private\": true,\n  \"type\": \"module\",\n  \"scripts\": {\n    \"start\": \"node src/server.js\"\n  }\n}"
+    },
+    {
+      "path": "src/server.js",
+      "content": "const http = require ? require('http') : null;\nconst PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;\nfunction createServer() {\n  const server = require('http').createServer((req, res) => {\n    if (req.url === '/health') {\n      res.writeHead(200, { 'Content-Type': 'application/json' });\n      res.end(JSON.stringify({ status: 'ok', port: PORT }));\n      return;\n    }\n    if (req.url.startsWith('/demo')) {\n      res.writeHead(200, { 'Content-Type': 'application/json' });\n      res.end(JSON.stringify({ message: \"{{message}}\" }));\n      return;\n    }\n    res.writeHead(404, { 'Content-Type': 'application/json' });\n    res.end(JSON.stringify({ error: 'not found' }));\n  });\n  server.listen(PORT, () => {\n    console.log('server started on port ' + PORT);\n  });\n}\ncreateServer();\n"
+    }
+  ]
+}

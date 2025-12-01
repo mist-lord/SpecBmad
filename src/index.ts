@@ -25,9 +25,24 @@ import { tasksCommand } from '@/commands/tasks';
 import { implementCommand } from '@/commands/implement';
 import { qaCommand } from '@/commands/qa';
 import { reportCommand } from '@/commands/report';
+import { workflowCommand } from '@/commands/workflow';
+import { deployCommand } from '@/commands/deploy';
+import { generateCommand } from '@/commands/generate';
+import { runCommand } from '@/commands/run';
+import { quickCommand } from '@/commands/quick';
+import { constitutionCommand } from '@/commands/constitution';
+import { pluginsCommand } from '@/commands/plugins';
+import { goCommand } from '@/commands/go';
+import { changeCommand } from '@/commands/change';
+import { uiCommand } from '@/commands/ui';
+import { doctorCommand } from '@/commands/doctor';
+import { registerBuiltInStacks } from '@/core/stack';
 
 // 加载环境变量
 config();
+
+// 注册内置技术栈
+registerBuiltInStacks();
 
 const program = new Command();
 
@@ -51,16 +66,18 @@ program
 program
   .command('init')
   .description('初始化新的SpecKit-BMAD项目')
-  .argument('<project-name>', '项目名称')
+  .argument('[project-name]', '项目名称')
   .option('-t, --template <name>', '使用指定项目模板')
   .option('-l, --language <lang>', '项目主要编程语言')
   .option('-f, --framework <fw>', '使用的开发框架')
   .option('-a, --agents <list>', '启用的AI代理列表')
   .option('--llm-provider <name>', '默认LLM提供商')
-  .option('-i, --interactive', '交互式配置模式')
+  .option('--wizard', '启动交互式向导')
+  .option('-i, --interactive', '交互式配置模式 (旧版)')
   .action(initCommand);
 
 program.addCommand(configCommand);
+program.addCommand(pluginsCommand);
 
 program
   .command('agents')
@@ -77,6 +94,16 @@ program
   .option('-d, --detailed', '显示详细状态')
   .action(statusCommand);
 
+// 一键命令（简化使用流程）
+program
+  .command('go')
+  .description('🚀 一键生成项目：从需求到代码的完整流程（自动初始化，零配置）')
+  .argument('<需求描述>', '项目需求描述')
+  .option('--auto-run', '生成后自动运行')
+  .option('-f, --format <fmt>', '输出格式 (json|markdown|yaml)', 'markdown')
+  .option('--silent', '静默模式，减少输出')
+  .action(goCommand);
+
 // BMAD-Method 工作流命令
 program.addCommand(analyzeCommand);
 program.addCommand(planCommand);
@@ -85,8 +112,45 @@ program.addCommand(bmmCommand);
 
 // 汇总报告命令
 program.addCommand(reportCommand);
+program.addCommand(changeCommand);
+program.addCommand(uiCommand);
+program.addCommand(doctorCommand);
 
 // Spec-Kit 工作流命令
+program.addCommand(constitutionCommand);
+program
+  .command('generate')
+  .description('从需求生成完整项目与文档')
+  .option('-i, --input <file>', '输入需求文件路径')
+  .option('-s, --stack <name>', '生成栈 (ts-app|py-lib)', 'ts-app')
+  .option('-t, --template <name>', '模板名称')
+  .option('-o, --out <dir>', '项目输出目录')
+  .option('-d, --doc-out <dir>', '文档输出目录')
+  .option('--auto-implement', '自动实现关键模块')
+  .option('--qa', '生成基础测试')
+  .option('-F, --format <fmt>', '说明书格式 (markdown|json)', 'markdown')
+  .option('--dry-run', '干跑模式，不落盘')
+  .action(generateCommand);
+
+program
+  .command('run')
+  .description('运行生成的程序')
+  .option('-d, --dir <dir>', '项目目录', 'generated/project')
+  .option('-s, --stack <name>', '生成栈 (ts-app|py-lib)', 'ts-app')
+  .option('--python <bin>', 'Python 可执行文件名称', 'python')
+  .action(async (opts) => { await runCommand(opts as any); });
+
+program
+  .command('quick')
+  .description('一句话需求生成最小可运行Demo')
+  .option('-t, --text <text>', '一句话需求文本')
+  .option('-s, --stack <name>', '栈选择 (auto|ts-cli|ts-api|py-cli|ts-chat)', 'auto')
+  .option('--auto-run', '生成后自动运行')
+  .option('-o, --out <dir>', '项目输出目录', 'generated/project')
+  .option('-d, --doc-out <dir>', '文档输出目录', 'docs')
+  .option('--dry-run', '干跑模式，不落盘')
+  .action(quickCommand);
+
 program
   .command('specify')
   .description('生成需求规格文档')
@@ -102,10 +166,11 @@ program
 program
   .command('tasks')
   .description('拆解开发任务')
-  .option('-i, --input <file>', '输入方案文件路径')
+  .option('-g, --goal <text>', '规划目标说明')
   .option('-o, --output <file>', '输出任务文件路径')
   .option('-a, --agent <name>', '指定执行代理')
-  .option('--priority', '按优先级排序')
+  .option('-f, --format <fmt>', '输出格式 (markdown|json)', 'markdown')
+  .option('-r, --report-dir <dir>', '指定报告目录，自动生成文件名')
   .action(tasksCommand);
 
 program
@@ -115,6 +180,9 @@ program
   .option('-f, --file <path>', '指定实现文件')
   .option('-a, --agent <name>', '指定执行代理')
   .option('--review', '启用代码审查')
+  .option('-o, --output <file>', '输出实现结果文件路径')
+  .option('-r, --report-dir <dir>', '指定报告目录，自动生成文件名')
+  .option('-F, --format <fmt>', '输出格式 (markdown|json)', 'markdown')
   .action(implementCommand);
 
 program
@@ -124,7 +192,41 @@ program
   .option('-f, --file <path>', '指定检查文件')
   .option('-a, --agent <name>', '指定执行代理')
   .option('--fix', '自动修复发现的问题')
+  .option('-o, --output <file>', '输出检查结果文件路径')
+  .option('-r, --report-dir <dir>', '指定报告目录，自动生成文件名')
+  .option('-F, --format <fmt>', '输出格式 (markdown|json)', 'markdown')
   .action(qaCommand);
+
+
+
+program
+  .command('deploy')
+  .description('部署到目标环境')
+  .option('-e, --env <env>', '部署环境 (dev|staging|prod)', 'dev')
+  .option('-s, --strategy <name>', '部署策略 (rolling|canary|blue-green)', 'rolling')
+  .option('--dry-run', '干跑模式，仅生成计划不执行')
+  .option('--rollback', '执行回滚到上一个稳定版本')
+  .option('--build', '部署前执行构建')
+  .option('--skip-tests', '跳过基础验证测试')
+  .option('-t, --tag <name>', '发布版本标签')
+  .option('-o, --output <file>', '输出计划文件路径')
+  .option('-r, --report-dir <dir>', '指定报告目录，自动生成文件名')
+  .option('-F, --format <fmt>', '输出格式 (json|markdown)', 'json')
+  .action(deployCommand);
+
+program
+  .command('workflow')
+  .description('运行预设工作流')
+  .option('-n, --name <name>', '工作流名称 (planning-only|full-development)')
+  .option('-o, --output <file>', '输出摘要文件')
+  .option('-r, --report-dir <dir>', '指定报告目录，自动生成文件名')
+  .option('--date-prefix', '在文件名添加日期时间前缀 (YYYYMMDD-HHmmss-)')
+  .option('--dedupe', '避免覆盖：若重名则追加递增后缀 (-1, -2...)')
+  .option('-f, --format <fmt>', '输出格式 (json|markdown|yaml)', 'json')
+  .option('--resume', '从上次失败处恢复执行')
+  .option('--resume-file <file>', '指定状态文件，默认 .bmad/workflow.state.json')
+  .option('--auto-run', '工作流完成后自动运行生成程序')
+  .action(workflowCommand);
 
 // 如果没有提供命令，显示帮助信息
 if (!process.argv.slice(2).length) {
@@ -135,17 +237,29 @@ if (!process.argv.slice(2).length) {
 }
 
 // 错误处理
+// 斜杠命令解析映射
+const argv = process.argv.slice(2);
+if (argv[0] && argv[0].startsWith('/speckit.')) {
+  const map: Record<string, string> = {
+    '/speckit.constitution': 'constitution',
+    '/speckit.specify': 'specify',
+    '/speckit.plan': 'plan',
+    '/speckit.tasks': 'tasks',
+    '/speckit.implement': 'implement',
+  };
+  const mapped = map[argv[0]];
+  if (mapped) {
+    process.argv.splice(2, 1, mapped);
+  }
+}
+
 program.exitOverride();
 
-try {
-  program.parse();
-} catch (error) {
+program.parseAsync().catch((error) => {
   if (error instanceof CommanderError) {
-    // 对帮助与版本的正常展示使用 0 退出码
     if (error.code === 'commander.helpDisplayed' || error.code === 'commander.version') {
       process.exit(0);
     }
-    // 其它 CommanderError：记录并按推荐退出码退出
     log.error(`命令执行失败: ${error.message}`);
     const options = program.opts();
     if (options['debug']) {
@@ -153,7 +267,6 @@ try {
     }
     process.exit(error.exitCode ?? 1);
   } else if (error instanceof Error) {
-    // 非 CommanderError 的错误
     log.error(`命令执行失败: ${error.message}`);
     const options = program.opts();
     if (options['debug']) {
@@ -163,4 +276,4 @@ try {
   } else {
     process.exit(1);
   }
-}
+});

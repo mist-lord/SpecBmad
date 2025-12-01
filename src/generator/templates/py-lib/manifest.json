@@ -1,0 +1,20 @@
+{
+  "files": [
+    {
+      "path": "pyproject.toml",
+      "content": "[project]\nname = \"{{projectName}}\"\nversion = \"0.1.0\"\n"
+    },
+    {
+      "path": "src/{{packageName}}/__init__.py",
+      "content": "def main():\n    print('hello')\n"
+    },
+    {
+      "path": "main.py",
+      "content": "import sys\nsys.path.append('src')\nfrom {{packageName}} import main\nif __name__ == '__main__':\n    main()\n"
+    },
+    {
+      "path": "tests/test_basic.py",
+      "content": "def test_basic():\n    assert 1 == 1\n"
+    }
+  ]
+}

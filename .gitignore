@@ -35,5 +35,8 @@ python/venv/
 *.pyd
 .pytest_cache/
 
+# Research clones
+research/source-repos/
+
 # Misc
 Thumbs.db

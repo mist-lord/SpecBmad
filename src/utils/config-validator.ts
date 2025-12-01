@@ -227,11 +227,27 @@ export class ConfigMigrator {
       };
     }
 
+    // 迁移集成配置
+    if (config.integration) {
+      const integ = config.integration;
+      migrated.integration = {
+        workflow_mode: integ.workflowMode || integ.workflow_mode || 'hybrid',
+        output_format: integ.outputFormat || integ.output_format || 'markdown',
+        bridge_mode: integ.bridgeMode || integ.bridge_mode || 'subprocess'
+      };
+    } else {
+      migrated.integration = {
+        workflow_mode: 'hybrid',
+        output_format: 'markdown',
+        bridge_mode: 'subprocess'
+      };
+    }
+
     // 迁移代理配置
     if (config.agents) {
       migrated.agents = config.agents;
     }
-
+    
     // 迁移其他配置
     migrated.outputDir = config.outputDir || config.output_dir || './output';
     migrated.templatesDir = config.templatesDir || config.templates_dir || './templates';

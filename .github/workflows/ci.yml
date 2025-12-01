@@ -5,6 +5,9 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch:
 
 jobs:
   node:
@@ -28,13 +31,57 @@ jobs:
       - name: Install deps
         run: pnpm install --frozen-lockfile
       - name: Lint
-        run: pnpm lint
+        run: pnpm run lint:gate
       - name: Type Check
         run: pnpm run type-check
+      - name: Security Audit Gate
+        run: pnpm run ci:security-gate
       - name: Build
         run: pnpm run build
       - name: Test
         run: pnpm test
+      - name: Integration pass rate (compute & gate >=90%)
+        env:
+          BMAD_MOCK_LLM: 1
+        run: |
+          pnpm run report:integration
+          pnpm run ci:integration-gate
+      - name: Performance smoke & gate
+        env:
+          BMAD_MOCK_LLM: 1
+        run: |
+          pnpm run benchmark:workflow
+          pnpm run ci:perf-gate
+      - name: Build CLI
+        run: pnpm run build
+      - name: CLI smoke gate (core commands & artifacts)
+        env:
+          BMAD_MOCK_LLM: 1
+        run: |
+          pnpm run ci:cli-smoke-gate
+      - name: Run workflow smoke (naming)
+        id: workflow_run
+        continue-on-error: true
+        env:
+          BMAD_MOCK_LLM: 1
+        run: |
+          node dist/index.js workflow --name naming --report-dir .bmad/naming --date-prefix --dedupe
+      - name: Resume workflow if failed
+        if: steps.workflow_run.conclusion == 'failure'
+        env:
+          BMAD_MOCK_LLM: 1
+        run: |
+          node dist/index.js workflow --name naming --resume --report-dir .bmad/naming --date-prefix --dedupe
+      - name: Gate - require workflow completion
+        if: always()
+        run: |
+          node -e "const fs=require('fs');const p='.bmad/workflow.state.json';if(!fs.existsSync(p)){console.error('Gate: no state file');process.exit(1)}const j=JSON.parse(fs.readFileSync(p));if(j.status!=='completed'){console.error('Gate: workflow not completed');process.exit(1)}console.log('Gate: workflow completed with', j.completedSteps?.length||0,'steps')"
+      - name: Upload workflow artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bmad-workflow-artifacts
+          path: .bmad
 
   python:
     name: Python bridge smoke test
@@ -54,3 +101,46 @@ jobs:
         working-directory: python
         run: |
           python test_bridge.py
+
+  kpi-report:
+    name: KPI sampling & artifact report
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node 18.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+          cache: 'pnpm'
+      - name: Enable Corepack & activate pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.20.0 --activate
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+      - name: Build
+        run: pnpm run build
+      - name: Run KPI sampling
+        env:
+          BMAD_MOCK_LLM: 1
+        run: pnpm run report:kpi
+      - name: Compute integration pass rate
+        env:
+          BMAD_MOCK_LLM: 1
+        run: pnpm run report:integration
+      - name: Generate artifact reports (MD/HTML)
+        run: |
+          node dist/index.js report --format markdown --output docs/最新运行报告.md
+          node dist/index.js report --format html --output docs/最新运行报告.html
+      - name: Upload KPI & Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: bmad-kpi-and-reports
+          path: |
+            .bmad/kpi.json
+            .bmad/benchmark.json
+            .bmad/jest-integration.json
+            docs/最新运行报告.md
+            docs/最新运行报告.html

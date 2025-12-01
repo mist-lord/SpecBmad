@@ -1,199 +1,185 @@
-import { LLMClient, AgentType } from '@/types';
+import { log } from '@/utils/logger';
 import { LLMClientFactory } from './base';
 import { createClaudeClient } from './claude';
-import { getProjectConfig, ConfigManager } from '@/utils/config';
-import { log } from '@/utils/logger';
+import { createOpenAIClient } from './openai';
+import { createMockLLMClient } from './mock';
+import { ConfigManager, getProjectConfig } from '@/utils/config';
+import { AgentType, LLMClient } from '@/types';
 
-/**
- * LLM管理器
- * 负责初始化、管理和协调所有LLM客户端
- */
 export class LLMManager {
-  private static instance: LLMManager;
   private initialized = false;
+  private readonly clients: Map<string, LLMClient> = new Map();
 
-  private constructor() {}
-
-  /**
-   * 获取单例实例
-   */
-  public static getInstance(): LLMManager {
-    if (!LLMManager.instance) {
-      LLMManager.instance = new LLMManager();
-    }
-    return LLMManager.instance;
-  }
-
-  /**
-   * 初始化LLM管理器
-   */
   public async initialize(): Promise<void> {
-    if (this.initialized) {
-      return;
+    if (this.initialized) return;
+
+    const configManager = new ConfigManager();
+    const projectConfig = configManager.load();
+
+    // 注册默认可用的客户端（基于环境变量）
+    this.initializeDefaultClients();
+
+    // 基于项目配置注册客户端
+    this.initializeConfiguredClients(projectConfig);
+
+    this.initialized = true;
+    log.info('LLM 管理器初始化完成');
+  }
+
+  private initializeDefaultClients(): void {
+    const mockEnabled = process.env.BMAD_MOCK_LLM === '1';
+    if (mockEnabled && !this.hasClient('Mock')) {
+      const mockClient = createMockLLMClient('Mock');
+      LLMClientFactory.register(mockClient);
+      this.clients.set('Mock', mockClient);
+      log.info('已注册默认 Mock LLM 客户端（离线支持）');
     }
 
-    try {
-      log.info('正在初始化 LLM 管理器...');
+    const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
+    if (anthropicApiKey) {
+      const claudeClient = createClaudeClient({
+        apiKey: anthropicApiKey,
+        defaultModel: process.env.ANTHROPIC_MODEL || 'claude-3-sonnet',
+        baseUrl: process.env.ANTHROPIC_BASE_URL
+      });
+      LLMClientFactory.register(claudeClient);
+      this.clients.set('Claude', claudeClient);
+      log.info('已注册默认 Claude LLM 客户端');
+    } else {
+      log.warn('未找到 ANTHROPIC_API_KEY，Claude 客户端不可用');
+    }
 
-      // 加载配置
-      const configManager = new ConfigManager();
-      const projectConfig = configManager.load();
-      
-      // 初始化默认客户端
-      await this.initializeDefaultClients();
-      
-      // 从配置中初始化自定义客户端
-      if (projectConfig.agents) {
-        await this.initializeConfiguredClients(projectConfig.agents);
+    const openaiApiKey = process.env.OPENAI_API_KEY;
+    if (openaiApiKey) {
+      const openaiClient = createOpenAIClient({
+        apiKey: openaiApiKey,
+        defaultModel: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+        baseUrl: process.env.OPENAI_BASE_URL
+      });
+      LLMClientFactory.register(openaiClient);
+      this.clients.set('OpenAI', openaiClient);
+      log.info('已注册默认 OpenAI LLM 客户端');
+    } else {
+      log.warn('未找到 OPENAI_API_KEY，OpenAI 客户端不可用');
+    }
+  }
+
+  private initializeConfiguredClients(projectConfig: ReturnType<ConfigManager['load']>): void {
+    const agentsCfg = projectConfig.agents || {};
+
+    for (const [name, agentCfg] of Object.entries(agentsCfg)) {
+      if (!agentCfg.enabled) continue;
+
+      const type = (agentCfg.type || '').toLowerCase();
+      switch (type) {
+        case 'claude': {
+          if (!this.hasClient(name)) {
+            const client = createClaudeClient({
+              apiKey: agentCfg.apiKey,
+              defaultModel: agentCfg.model || 'claude-3-sonnet',
+              baseUrl: agentCfg.baseUrl
+            });
+            // 重命名客户端以匹配配置名称
+            (client as any).name = name;
+            LLMClientFactory.register(client);
+            this.clients.set(name, client);
+            log.info(`已注册配置的 Claude 客户端: ${name}`);
+          }
+          break;
+        }
+        case 'openai': {
+          if (!this.hasClient(name)) {
+            const client = createOpenAIClient({
+              apiKey: agentCfg.apiKey,
+              defaultModel: agentCfg.model || 'gpt-4o-mini',
+              baseUrl: agentCfg.baseUrl
+            });
+            // 重命名客户端以匹配配置名称
+            (client as any).name = name;
+            LLMClientFactory.register(client);
+            this.clients.set(name, client);
+            log.info(`已注册配置的 OpenAI 客户端: ${name}`);
+          }
+          break;
+        }
+        case 'mock': {
+          if (!this.hasClient(name)) {
+            const client = createMockLLMClient(name);
+            LLMClientFactory.register(client);
+            this.clients.set(name, client);
+            log.info(`已注册配置的 Mock 客户端: ${name}`);
+          }
+          break;
+        }
+        default:
+          log.warn(`不支持的代理类型: ${agentCfg.type}`);
       }
-
-      this.initialized = true;
-      log.success('LLM 管理器初始化完成');
-    } catch (error) {
-      log.error(`LLM 管理器初始化失败: ${error instanceof Error ? error.message : String(error)}`);
-      throw error;
     }
   }
 
-  /**
-   * 获取客户端
-   */
-  public getClient(name: string): LLMClient | undefined {
-    return LLMClientFactory.get(name);
+  private hasClient(name: string): boolean {
+    return this.clients.has(name) || !!LLMClientFactory.get(name);
   }
 
-  /**
-   * 获取默认客户端
-   */
-  public getDefaultClient(): LLMClient | undefined {
-    const projectConfig = getProjectConfig();
-    const defaultAgentName = projectConfig.spec_kit?.ai_agent || 'Claude';
-    return this.getClient(defaultAgentName);
-  }
+  public async getClientStatus(): Promise<{ name: string; type: AgentType; available: boolean; error?: string }[]> {
+    const results: { name: string; type: AgentType; available: boolean; error?: string }[] = [];
+    const allClients = LLMClientFactory.getAll();
 
-  /**
-   * 获取所有可用客户端
-   */
-  public async getAvailableClients(): Promise<LLMClient[]> {
-    return await LLMClientFactory.getAvailable();
-  }
-
-  /**
-   * 按类型获取客户端
-   */
-  public getClientsByType(type: AgentType): LLMClient[] {
-    return LLMClientFactory.getByType(type);
-  }
-
-  /**
-   * 检查客户端是否存在
-   */
-  public hasClient(name: string): boolean {
-    return LLMClientFactory.get(name) !== undefined;
-  }
-
-  /**
-   * 添加客户端
-   */
-  public addClient(client: LLMClient): void {
-    LLMClientFactory.register(client);
-  }
-
-  /**
-   * 获取客户端状态
-   */
-  public async getClientStatus(): Promise<Array<{
-    name: string;
-    type: AgentType;
-    available: boolean;
-    error?: string;
-  }>> {
-    const clients = LLMClientFactory.getAll();
-    const status = [];
-
-    for (const client of clients) {
+    for (const client of allClients) {
       try {
         const available = await client.isAvailable();
-        status.push({
-          name: client.name,
-          type: client.type,
-          available
-        });
-      } catch (error) {
-        status.push({
+        results.push({ name: client.name, type: client.type, available });
+      } catch (err) {
+        results.push({
           name: client.name,
           type: client.type,
           available: false,
-          error: error instanceof Error ? error.message : String(error)
+          error: err instanceof Error ? err.message : String(err)
         });
       }
     }
-
-    return status;
+    return results;
   }
 
-  /**
-   * 初始化默认客户端
-   */
-  private async initializeDefaultClients(): Promise<void> {
-    // 初始化Claude客户端
-    const claudeApiKey = process.env['ANTHROPIC_API_KEY'];
-    if (claudeApiKey) {
-      const claudeClient = createClaudeClient({
-        apiKey: claudeApiKey
-      });
-      LLMClientFactory.register(claudeClient);
-      log.info('已注册 Claude 客户端');
-    } else {
-      log.warn('未找到 ANTHROPIC_API_KEY 环境变量，Claude 客户端将不可用');
+  public getDefaultClient(): LLMClient | null {
+    // 从项目配置选择默认客户端，若不可用则回退至 Mock
+    const project = getProjectConfig();
+    const defaultNameRaw = project?.spec_kit?.ai_agent || 'Claude';
+    const defaultName = this.normalizeDefaultClientName(defaultNameRaw);
+
+    const client = LLMClientFactory.get(defaultName) || LLMClientFactory.get(defaultNameRaw);
+    if (client) return client;
+
+    // 回退到 Mock
+    const mock = LLMClientFactory.get('Mock');
+    if (mock) return mock;
+
+    log.warn(`未找到默认 LLM 客户端: ${defaultNameRaw}。请检查配置或环境。`);
+    return null;
+  }
+
+  private normalizeDefaultClientName(name: string): string {
+    const n = (name || '').trim().toLowerCase();
+    switch (n) {
+      case 'claude':
+      case 'anthropic':
+      case 'sonnet':
+      case 'claude-3-sonnet':
+        return 'Claude';
+      case 'openai':
+      case 'gpt':
+      case 'gpt-4':
+      case 'gpt-4o':
+      case 'gpt-4o-mini':
+        return 'OpenAI';
+      case 'mock':
+      case 'fake':
+      case 'offline':
+        return 'Mock';
+      default:
+        return name;
     }
-
-    // TODO: 添加其他默认客户端（OpenAI等）
-  }
-
-  /**
-   * 从配置初始化客户端
-   */
-  private async initializeConfiguredClients(agentsConfig: Record<string, any>): Promise<void> {
-    for (const [name, agentConfig] of Object.entries(agentsConfig)) {
-      try {
-        if (!agentConfig.enabled) {
-          continue;
-        }
-
-        switch (agentConfig.type) {
-          case 'claude':
-            if (!this.hasClient(name)) {
-              const client = createClaudeClient({
-                apiKey: agentConfig.apiKey,
-                baseUrl: agentConfig.baseUrl,
-                defaultModel: agentConfig.model
-              });
-              // 重命名客户端
-              (client as any).name = name;
-              LLMClientFactory.register(client);
-              log.info(`已注册配置的 Claude 客户端: ${name}`);
-            }
-            break;
-          
-          // TODO: 添加其他客户端类型的支持
-          default:
-            log.warn(`不支持的代理类型: ${agentConfig.type}`);
-        }
-      } catch (error) {
-        log.error(`初始化客户端 ${name} 失败: ${error instanceof Error ? error.message : String(error)}`);
-      }
-    }
-  }
-
-  /**
-   * 重置管理器
-   */
-  public reset(): void {
-    LLMClientFactory.clear();
-    this.initialized = false;
   }
 }
 
-// 导出单例实例
-export const llmManager = LLMManager.getInstance();
+export const llmManager = new LLMManager();

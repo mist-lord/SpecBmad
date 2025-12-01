@@ -1,0 +1,12 @@
+{
+  "files": [
+    {
+      "path": "package.json",
+      "content": "{\n  \"name\": \"{{projectName}}\",\n  \"version\": \"0.1.0\",\n  \"private\": true,\n  \"type\": \"module\",\n  \"scripts\": {\n    \"start\": \"node src/index.js\"\n  }\n}"
+    },
+    {
+      "path": "src/index.js",
+      "content": "const msg = \"{{message}}\";\nconsole.log(msg);\n"
+    }
+  ]
+}

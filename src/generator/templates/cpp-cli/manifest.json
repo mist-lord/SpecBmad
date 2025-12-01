@@ -1,0 +1,21 @@
+{
+  "files": [
+    {
+      "path": "CMakeLists.txt",
+      "content": "cmake_minimum_required(VERSION 3.10)\nproject({{projectName}})\n\nset(CMAKE_CXX_STANDARD 17)\nset(CMAKE_CXX_STANDARD_REQUIRED ON)\n\nadd_executable(${CMAKE_PROJECT_NAME} src/main.cpp)\n\n# 安装目标\ninstall(TARGETS ${CMAKE_PROJECT_NAME} DESTINATION bin)\n"
+    },
+    {
+      "path": "src/main.cpp",
+      "content": "#include <iostream>\n#include <string>\n\nint main(int argc, char* argv[]) {\n    std::cout << \"Hello from {{projectName}}!\" << std::endl;\n    std::cout << \"Message: {{message}}\" << std::endl;\n    return 0;\n}\n"
+    },
+    {
+      "path": "README.md",
+      "content": "# {{projectName}}\n\n## 构建\n\n```bash\nmkdir build && cd build\ncmake ..\nmake\n```\n\n## 运行\n\n```bash\n./{{packageName}}\n```\n"
+    },
+    {
+      "path": ".gitignore",
+      "content": "build/\n*.o\n*.a\n*.so\n*.exe\n*.dylib\n*.dll\n.DS_Store\n"
+    }
+  ]
+}
+

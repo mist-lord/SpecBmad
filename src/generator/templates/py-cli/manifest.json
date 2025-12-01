@@ -1,0 +1,12 @@
+{
+  "files": [
+    {
+      "path": "main.py",
+      "content": "print(\"{{message}}\")\n"
+    },
+    {
+      "path": "src/{{packageName}}/__init__.py",
+      "content": "def main():\n    print(\"{{message}}\")\n"
+    }
+  ]
+}

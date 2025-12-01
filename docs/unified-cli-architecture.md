@@ -176,6 +176,8 @@ Python桥接管理
 
 ## 配置系统设计
 
+> 详见：`docs/Agent配置文件说明.md`（包含 `.specbmad/config.json` 示例与代理别名用法）
+
 ### 配置文件层次
 
 1. **全局配置**: `~/.speckit-bmad/config.yaml`

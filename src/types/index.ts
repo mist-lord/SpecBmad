@@ -202,3 +202,52 @@ export enum WorkflowStatus {
   FAILED = 'failed',
   CANCELLED = 'cancelled'
 }
+
+// AI Agent 类型定义
+export interface AgentContext {
+  projectState: {
+    projectName: string;
+    workflow: {
+      currentStep: string;
+      completedSteps: string[];
+    };
+  };
+  workingDirectory: string;
+  inputData?: any;
+  [key: string]: any;
+}
+
+export interface AgentMemory {
+  shortTerm: Record<string, any>;
+  longTerm: Record<string, any>;
+  context: string[];
+}
+
+export interface LLMMetrics {
+  model?: string;
+  promptLength?: number;
+  outputLength?: number;
+  inputTokens?: number;
+  outputTokens?: number;
+  latencyMs?: number;
+  costUSD?: number;
+  startedAt?: number;
+  finishedAt?: number;
+}
+
+export interface AgentResult {
+  success: boolean;
+  output: any;
+  artifacts: string[];
+  nextSteps?: string[];
+  errors?: string[];
+  metadata?: { metrics?: LLMMetrics; [key: string]: any };
+}
+
+export interface Agent {
+  name: string;
+  role: string;
+  capabilities: string[];
+  execute(context: AgentContext): Promise<AgentResult>;
+  validate?(input: any): boolean;
+}

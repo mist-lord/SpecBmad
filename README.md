@@ -49,45 +49,52 @@ pnpm build
 pnpm test
 ```
 
-## 🎯 快速开始
+## 🎯 快速开始（零配置）
 
-### 1. 初始化项目
-
-```bash
-# 在你的项目目录中初始化 Spec-BMAD 环境
-spec-bmad init
-
-# 这将创建以下结构：
-# .bmad-core/          # 核心配置和状态文件
-# .specify/            # 规格文档存储目录
-# templates/           # 模板文件目录
-```
-
-### 2. 生成需求规格
+### 最简单的方式（推荐）
 
 ```bash
-# 基于现有需求文档生成规格
-spec-bmad specify --input requirements.md --output spec.md
+# 1. 安装依赖
+pnpm install && pnpm build
 
-# 交互式规格生成
-spec-bmad specify --interactive
-
-# 使用特定模板
-spec-bmad specify --template web-app --input requirements.md
+# 2. 一句话生成完整项目（自动初始化，无需配置）
+node dist/index.js go "创建一个待办事项应用"
 ```
 
-### 3. 配置 LLM 提供商
+就这么简单！工具会自动：
+- ✅ 初始化项目配置
+- ✅ 检测项目类型和语言
+- ✅ 配置 LLM（自动使用 Mock 或真实 API）
+- ✅ 执行完整工作流（需求→分析→规划→任务→实现→QA）
+
+### 其他常用场景
 
 ```bash
-# 配置 OpenAI
-export OPENAI_API_KEY="your-api-key"
+# 仅需求分析
+node dist/index.js analyze "构建一个 REST API 服务"
 
-# 配置 Claude (Anthropic)
-export ANTHROPIC_API_KEY="your-api-key"
+# 仅技术规划
+node dist/index.js plan "创建一个待办事项应用"
 
-# 或者在配置文件中设置
-# .bmad-core/config.json
+# 查看项目状态
+node dist/index.js status
 ```
+
+### 使用真实 AI（可选）
+
+```bash
+# 设置 API Key（可选，不设置会自动使用 Mock 模式）
+export OPENAI_API_KEY="your-key-here"
+# 或
+export ANTHROPIC_API_KEY="your-key-here"
+
+# 然后正常使用
+node dist/index.js go "创建一个待办事项应用"
+```
+
+**没有 API Key？** 没问题！工具会自动使用离线 Mock 模式，功能完全可用。
+
+> 📖 更多使用说明请查看 [快速开始指南](./docs/快速开始-简化版.md)
 
 ## 📖 使用指南
 

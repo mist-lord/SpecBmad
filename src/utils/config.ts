@@ -1,7 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import YAML from 'yaml';
 import { log } from './logger';
+import { PATHS, getProjectPath } from './paths';
 
 export interface ProjectConfig {
   // 项目基础配置
@@ -42,6 +44,19 @@ export interface ProjectConfig {
     };
   };
   
+  // 工作流定义（可扩展）
+  workflows?: {
+    [name: string]: {
+      description?: string;
+      steps: Array<{
+        id: string;
+        name: string;
+        agent: string;
+        input?: Record<string, any>;
+      }>;
+    };
+  };
+  
   // 集成配置
   integration?: {
     workflow_mode?: 'hybrid' | 'spec_first' | 'bmad_first';
@@ -49,9 +64,15 @@ export interface ProjectConfig {
     bridge_mode?: 'subprocess' | 'api' | 'direct';
   };
   
-  // 输出配置
+  // 输出与模板
   outputDir?: string;
   templatesDir?: string;
+  
+  // LLM 优化与缓存
+  cacheDir?: string;
+  llmCacheEnabled?: boolean;
+  llmCacheTTLSeconds?: number;
+  llmConcurrencyLimit?: number;
   
   // 日志配置
   logLevel?: string;
@@ -65,15 +86,21 @@ export interface ProjectConfig {
 class ConfigManager {
   private configPath: string;
   private altProjectConfigPath: string;
+  private configPathYaml: string;
+  private altProjectConfigPathYaml: string;
   private globalConfigPath: string;
+  private globalConfigPathYaml: string;
   private config: ProjectConfig = {};
 
   constructor() {
-    // 项目配置文件路径（兼容两种路径）
-    this.configPath = path.join(process.cwd(), '.specbmad.json');
-    this.altProjectConfigPath = path.join(process.cwd(), '.specbmad', 'config.json');
+    // 项目配置文件路径（兼容两种路径，使用路径常量）
+    this.configPath = getProjectPath(PATHS.CONFIG_FILE_JSON);
+    this.altProjectConfigPath = getProjectPath(PATHS.CONFIG_FILE_ALT_JSON);
+    this.configPathYaml = getProjectPath(PATHS.CONFIG_FILE_YAML);
+    this.altProjectConfigPathYaml = getProjectPath(PATHS.CONFIG_FILE_ALT_YAML);
     // 全局配置文件路径
     this.globalConfigPath = path.join(os.homedir(), '.specbmad', 'config.json');
+    this.globalConfigPathYaml = path.join(os.homedir(), '.specbmad', 'config.yaml');
   }
 
   /**
@@ -103,33 +130,52 @@ class ConfigManager {
   public save(config: Partial<ProjectConfig>, global = false): void {
     try {
       let targetPath = global ? this.globalConfigPath : this.configPath;
+      let useYaml = false;
 
       if (!global) {
         // 若存在新路径或其目录，优先写入新路径以实现路径统一
         const altDir = path.dirname(this.altProjectConfigPath);
-        if (fs.existsSync(this.altProjectConfigPath) || fs.existsSync(altDir)) {
+        if (fs.existsSync(this.altProjectConfigPathYaml)) {
+          targetPath = this.altProjectConfigPathYaml;
+          useYaml = true;
+        } else if (fs.existsSync(this.configPathYaml)) {
+          targetPath = this.configPathYaml;
+          useYaml = true;
+        } else if (fs.existsSync(this.altProjectConfigPath) || fs.existsSync(altDir)) {
           targetPath = this.altProjectConfigPath;
         }
+      } else {
+        if (fs.existsSync(this.globalConfigPathYaml)) {
+          targetPath = this.globalConfigPathYaml;
+          useYaml = true;
+        }
       }
-      
+
       // 确保目录存在
       const dir = path.dirname(targetPath);
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
       }
-      
+
       // 读取现有配置
       let existingConfig: ProjectConfig = {};
       if (fs.existsSync(targetPath)) {
         const content = fs.readFileSync(targetPath, 'utf-8');
-        existingConfig = JSON.parse(content);
+        existingConfig = targetPath.endsWith('.yaml') || targetPath.endsWith('.yml')
+          ? (YAML.parse(content) || {})
+          : JSON.parse(content);
       }
-      
+
       // 合并配置
       const mergedConfig = { ...existingConfig, ...config };
-      
+
       // 写入文件
-      fs.writeFileSync(targetPath, JSON.stringify(mergedConfig, null, 2));
+      if (useYaml || targetPath.endsWith('.yaml') || targetPath.endsWith('.yml')) {
+        const yamlText = YAML.stringify(mergedConfig);
+        fs.writeFileSync(targetPath, yamlText, 'utf-8');
+      } else {
+        fs.writeFileSync(targetPath, JSON.stringify(mergedConfig, null, 2));
+      }
       
       // 更新内存中的配置
       this.config = { ...this.config, ...config };
@@ -206,6 +252,10 @@ class ConfigManager {
 
   private loadGlobalConfig(): ProjectConfig {
     try {
+      if (fs.existsSync(this.globalConfigPathYaml)) {
+        const content = fs.readFileSync(this.globalConfigPathYaml, 'utf-8');
+        return YAML.parse(content) || {};
+      }
       if (fs.existsSync(this.globalConfigPath)) {
         const content = fs.readFileSync(this.globalConfigPath, 'utf-8');
         return JSON.parse(content);
@@ -218,12 +268,22 @@ class ConfigManager {
 
   private loadProjectConfig(): ProjectConfig {
     try {
-      // 优先使用新路径 /.specbmad/config.json
+      // 优先使用新路径 YAML /.specbmad/config.yaml
+      if (fs.existsSync(this.altProjectConfigPathYaml)) {
+        const content = fs.readFileSync(this.altProjectConfigPathYaml, 'utf-8');
+        return YAML.parse(content) || {};
+      }
+      // 其次使用旧根路径 YAML /.specbmad.yaml
+      if (fs.existsSync(this.configPathYaml)) {
+        const content = fs.readFileSync(this.configPathYaml, 'utf-8');
+        return YAML.parse(content) || {};
+      }
+      // 再使用新路径 JSON /.specbmad/config.json
       if (fs.existsSync(this.altProjectConfigPath)) {
         const content = fs.readFileSync(this.altProjectConfigPath, 'utf-8');
         return JSON.parse(content);
       }
-      // 回退到旧路径 /.specbmad.json
+      // 回退到旧路径 JSON /.specbmad.json
       if (fs.existsSync(this.configPath)) {
         const content = fs.readFileSync(this.configPath, 'utf-8');
         return JSON.parse(content);
@@ -270,7 +330,6 @@ export const defaultConfig: ProjectConfig = {
   language: 'typescript',
   framework: 'react',
   
-  // Spec-Kit 默认配置
   spec_kit: {
     enabled: true,
     ai_agent: 'claude',
@@ -278,7 +337,6 @@ export const defaultConfig: ProjectConfig = {
     constitution_file: './constitution.md'
   },
   
-  // BMAD-Method 默认配置
   bmad_method: {
     enabled: true,
     active_modules: ['bmm'],
@@ -286,7 +344,6 @@ export const defaultConfig: ProjectConfig = {
     workflow_mode: 'standard'
   },
   
-  // 集成配置
   integration: {
     workflow_mode: 'hybrid',
     output_format: 'markdown',
@@ -312,6 +369,13 @@ export const defaultConfig: ProjectConfig = {
   },
   outputDir: './output',
   templatesDir: './templates',
+  
+  // LLM 缓存默认启用
+  cacheDir: PATHS.CACHE_DIR,
+  llmCacheEnabled: true,
+  llmCacheTTLSeconds: 3600,
+  llmConcurrencyLimit: 4,
+  
   logLevel: 'info',
   autoSave: true,
   backupEnabled: true

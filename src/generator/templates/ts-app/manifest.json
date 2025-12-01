@@ -1,0 +1,20 @@
+{
+  "files": [
+    {
+      "path": "package.json",
+      "content": "{\n  \"name\": \"{{projectName}}\",\n  \"version\": \"0.1.0\",\n  \"private\": true,\n  \"type\": \"module\",\n  \"scripts\": {\n    \"build\": \"echo \\\"build\\\"\",\n    \"start\": \"node src/index.js\",\n    \"test\": \"echo \\\"test\\\"\"\n  }\n}"
+    },
+    {
+      "path": "src/index.ts",
+      "content": "export function main() { console.log('hello') }\nif (require.main === module) { main() }\n"
+    },
+    {
+      "path": "src/index.js",
+      "content": "export function main() { console.log('hello') }\nif (typeof require !== 'undefined' && require.main === module) { main() }\n"
+    },
+    {
+      "path": "tests/example.test.ts",
+      "content": "describe('basic', () => { it('works', () => { expect(1).toBe(1) }) })\n"
+    }
+  ]
+}
