@@ -1,9 +1,11 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
-import inquirer from 'inquirer';
-import { ConfigManager, ProjectConfig, getProjectConfig, saveConfig } from '@/utils/config';
+import { ConfigManager, ProjectConfig } from '@/utils/config';
 import { ConfigValidator, ConfigMigrator } from '@/utils/config-validator';
 import { log } from '@/utils/logger';
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
 
 interface ConfigOptions {
   get?: string;
@@ -56,6 +58,70 @@ export const configCommand = new Command('config')
     }
   });
 
+configCommand
+  .command('openai')
+  .description('配置 OpenAI 密钥与端点')
+  .option('--global', '写入全局配置')
+  .option('--env', '生成 ~/.specbmad/env.sh 并加入 shell 配置')
+  .option('--api-key <key>', 'OpenAI API Key')
+  .option('--base-url <url>', 'OpenAI Base URL', 'https://openai.weavex.tech/v1/chat/completions')
+  .option('--model <name>', '默认模型', 'gpt-4o-mini')
+  .action(async (opts: any) => {
+    const cm = new ConfigManager();
+    let apiKey = opts.apiKey as string | undefined;
+    let baseUrl = opts.baseUrl as string | undefined;
+    let model = opts.model as string | undefined;
+    if (!apiKey || !baseUrl || !model) {
+      const { default: inquirer } = await import('inquirer');
+      const ans = await inquirer.prompt([
+        { type: 'password', name: 'apiKey', message: '请输入 OpenAI API Key:', mask: '*', when: () => !apiKey },
+        { type: 'input', name: 'baseUrl', message: '请输入 Base URL:', default: 'https://openai.weavex.tech/v1/chat/completions', when: () => !baseUrl },
+        { type: 'input', name: 'model', message: '默认模型:', default: 'gpt-4o-mini', when: () => !model }
+      ]);
+      apiKey = apiKey || ans.apiKey;
+      baseUrl = baseUrl || ans.baseUrl;
+      model = model || ans.model;
+    }
+    if (opts.env) {
+      const dir = path.join(os.homedir(), '.specbmad');
+      const file = path.join(dir, 'env.sh');
+      fs.mkdirSync(dir, { recursive: true });
+      const text = [
+        `export OPENAI_API_KEY="${apiKey || ''}"`,
+        `export OPENAI_BASE_URL="${baseUrl || ''}"`,
+        `export OPENAI_MODEL="${model || 'gpt-4o-mini'}"`,
+        `export BMAD_MOCK_LLM=0`
+      ].join('\n') + '\n';
+      fs.writeFileSync(file, text, 'utf-8');
+      try { fs.chmodSync(file, 0o600); } catch {}
+      const shellRc = process.env.SHELL && process.env.SHELL.includes('zsh') ? path.join(os.homedir(), '.zshrc') : path.join(os.homedir(), '.bashrc');
+      try {
+        const line = 'source ~/.specbmad/env.sh';
+        const exists = fs.existsSync(shellRc) ? fs.readFileSync(shellRc, 'utf-8').includes(line) : false;
+        if (!exists) fs.appendFileSync(shellRc, `\n# SpecBmad OpenAI env\n${line}\n`, 'utf-8');
+      } catch {}
+      console.log(chalk.green('✅ 已生成 ~/.specbmad/env.sh 并添加到 shell 初始化文件'));
+      console.log(chalk.gray('当前会话可执行: source ~/.specbmad/env.sh'));
+    }
+    if (opts.global) {
+      cm.save({
+        agents: {
+          OpenAI: {
+            type: 'openai',
+            enabled: true,
+            baseUrl: baseUrl,
+            model: model
+          }
+        },
+        spec_kit: { enabled: true, ai_agent: 'OpenAI' }
+      }, true);
+      console.log(chalk.green('✅ 已写入全局配置 (不包含密钥)'));
+    }
+    if (!opts.env && !opts.global) {
+      console.log(chalk.yellow('未指定 --env 或 --global；建议使用 --env 写入环境或 --global 写入全局配置'));
+    }
+  });
+
 /**
  * 交互式配置
  */
@@ -64,6 +130,7 @@ async function runInteractiveConfig(configManager: ConfigManager): Promise<void>
 
   const currentConfig = configManager.load();
 
+  const { default: inquirer } = await import('inquirer');
   const answers = await inquirer.prompt([
     {
       type: 'input',
@@ -276,6 +343,7 @@ async function migrateConfig(configManager: ConfigManager): Promise<void> {
  * 重置配置
  */
 async function resetConfig(configManager: ConfigManager, global = false): Promise<void> {
+  const { default: inquirer } = await import('inquirer');
   const confirm = await inquirer.prompt([
     {
       type: 'confirm',

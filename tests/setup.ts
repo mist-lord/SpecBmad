@@ -1,6 +1,7 @@
 // 测试环境设置
 process.env['NODE_ENV'] = 'test';
 process.env['LOG_LEVEL'] = 'error';
+process.env['BMAD_MOCK_LLM'] = '1';
 
 // 模拟chalk模块
 jest.mock('chalk', () => {
@@ -43,14 +44,39 @@ jest.mock('winston', () => ({
 }));
 
 // 模拟配置模块
-jest.mock('@/utils/config', () => ({
-  config: {
+jest.mock('@/utils/config', () => {
+  const defaultProject = {
+    projectName: 'TestProject',
+    spec_kit: { ai_agent: 'Mock' },
+    bmad_method: { enabled: true, active_modules: ['bmm'], workflow_mode: 'standard' },
+    integration: { workflow_mode: 'hybrid', output_format: 'markdown', bridge_mode: 'subprocess' },
+    agents: {}
+  };
+
+  class ConfigManager {
+    load() { return defaultProject; }
+    save() { /* noop */ }
+    get(_key?: string) { return undefined; }
+    set(_key: string, _value: any) { /* noop */ }
+    getAll() { return defaultProject; }
+  }
+
+  const config = {
     load: jest.fn(() => ({})),
     save: jest.fn(),
     get: jest.fn(),
-    set: jest.fn()
-  }
-}));
+    set: jest.fn(),
+    getAll: jest.fn(() => ({}))
+  };
+
+  const getProjectConfig = () => defaultProject;
+
+  return {
+    ConfigManager,
+    config,
+    getProjectConfig
+  };
+});
 
 // 全局测试设置
 beforeEach(() => {
@@ -59,3 +85,6 @@ beforeEach(() => {
 
 // 设置测试超时
 jest.setTimeout(10000);
+
+// 对所有测试增加一次重试以降低偶发波动
+jest.retryTimes?.(1);

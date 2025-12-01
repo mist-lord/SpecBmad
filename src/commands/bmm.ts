@@ -1,6 +1,5 @@
 import { Command } from 'commander';
 import { log } from '@/utils/logger';
-import { getProjectConfig } from '@/utils/config';
 import { spawn, spawnSync } from 'child_process';
 import path from 'path';
 
@@ -8,7 +7,7 @@ export const bmmCommand = new Command('bmm')
   .description('运行BMAD-Method商业模型管理工作流')
   .option('-o, --operation <operation>', '操作类型 (analyze|optimize|validate|evolve|compare)', 'analyze')
   .option('-a, --agent <agent>', '指定BMM代理', 'BusinessAnalyst')
-  .option('--output <format>', '输出格式 (json|yaml|text)', 'json')
+  .option('--output <format>', '输出格式 (json|markdown|detailed)', 'json')
   .option('-v, --verbose', '详细输出')
   .action(async (options) => {
     try {
@@ -52,7 +51,8 @@ export const bmmCommand = new Command('bmm')
       // 执行Python桥接脚本
       const pythonProcess = spawn(pythonCmd, args, {
         stdio: 'inherit',
-        cwd: process.cwd()
+        cwd: process.cwd(),
+        env: { ...process.env, PYTHONPATH: path.join(process.cwd(), 'python') }
       });
       
       pythonProcess.on('close', (code) => {

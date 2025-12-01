@@ -1,6 +1,5 @@
 import { Command } from 'commander';
 import { log } from '@/utils/logger';
-import { getProjectConfig } from '@/utils/config';
 import { spawn, spawnSync } from 'child_process';
 import path from 'path';
 
@@ -9,7 +8,7 @@ export const solutionCommand = new Command('solution')
   .option('-t, --type <type>', '解决方案类型 (implementation|optimization|migration|integration|deployment)', 'implementation')
   .option('-a, --agent <agent>', '指定解决方案代理', 'Architect')
   .option('-d, --depth <level>', '分析深度等级 (1|2|3|4|5)', '3')
-  .option('-o, --output <path>', '输出路径')
+  .option('-o, --output <format>', '输出格式 (json|markdown|detailed)', 'json')
   .option('-v, --verbose', '详细输出')
   .action(async (options) => {
     try {
@@ -57,7 +56,8 @@ export const solutionCommand = new Command('solution')
       // 执行Python桥接脚本
       const pythonProcess = spawn(pythonCmd, args, {
         stdio: 'inherit',
-        cwd: process.cwd()
+        cwd: process.cwd(),
+        env: { ...process.env, PYTHONPATH: path.join(process.cwd(), 'python') }
       });
       
       pythonProcess.on('close', (code) => {
