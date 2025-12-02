@@ -93,13 +93,13 @@ configCommand
         `export BMAD_MOCK_LLM=0`
       ].join('\n') + '\n';
       fs.writeFileSync(file, text, 'utf-8');
-      try { fs.chmodSync(file, 0o600); } catch {}
+      try { fs.chmodSync(file, 0o600); } catch (_e) { /* Ignore chmod errors */ }
       const shellRc = process.env.SHELL && process.env.SHELL.includes('zsh') ? path.join(os.homedir(), '.zshrc') : path.join(os.homedir(), '.bashrc');
       try {
         const line = 'source ~/.specbmad/env.sh';
         const exists = fs.existsSync(shellRc) ? fs.readFileSync(shellRc, 'utf-8').includes(line) : false;
         if (!exists) fs.appendFileSync(shellRc, `\n# SpecBmad OpenAI env\n${line}\n`, 'utf-8');
-      } catch {}
+      } catch (_e) { /* Ignore shell rc errors */ }
       console.log(chalk.green('✅ 已生成 ~/.specbmad/env.sh 并添加到 shell 初始化文件'));
       console.log(chalk.gray('当前会话可执行: source ~/.specbmad/env.sh'));
     }

@@ -61,7 +61,7 @@ export async function generateByStack(opts: GeneratorOptions) {
 
 type Manifest = { files: Array<{ path: string; content: string }> }
 
-function loadManifest(stack: string, template?: string): Manifest | null {
+function loadManifest(stack: string, _template?: string): Manifest | null {
   const base = path.join(__dirname, 'templates', stack)
   const file = path.join(base, 'manifest.json')
   try {
@@ -73,7 +73,7 @@ function loadManifest(stack: string, template?: string): Manifest | null {
 }
 
 function toPkgName(name: string) {
-  return name.replace(/[^a-zA-Z0-9_\-]/g, '').replace(/\-+/g, '_')
+  return name.replace(/[^a-zA-Z0-9_-]/g, '').replace(/-+/g, '_')
 }
 
 function applyManifest(opts: GeneratorOptions, manifest: Manifest) {

@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import { PATHS, getArtifactsPath } from '@/utils/paths'
+import { PATHS } from '@/utils/paths'
 
 type ModulePlan = {
   name: string
@@ -110,7 +110,7 @@ export function updatePackageJson(projectDir: string): void {
     pkg.scripts = pkg.scripts || {}
     pkg.scripts.test = 'node tests/run-tests.cjs'
     fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2), 'utf-8')
-  } catch {}
+  } catch (_e) { /* Ignore package.json update errors */ }
 }
 
 export function buildTraceability(md: string, files: string[], tests: string[]): string {

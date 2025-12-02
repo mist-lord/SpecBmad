@@ -21,7 +21,7 @@ export abstract class BaseStackPlugin implements StackPlugin {
   }
   
   protected toPkgName(name: string) {
-    return name.replace(/[^a-zA-Z0-9_\-]/g, '').replace(/\-+/g, '_');
+    return name.replace(/[^a-zA-Z0-9_-]/g, '').replace(/-+/g, '_');
   }
 }
 

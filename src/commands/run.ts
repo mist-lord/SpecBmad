@@ -1,5 +1,6 @@
 import path from 'path'
 import { spawn } from 'child_process'
+import http from 'http'
 import type { IncomingMessage } from 'http'
 import { log } from '@/utils/logger'
 import { PerfTracer } from '@/utils/perf'
@@ -32,7 +33,7 @@ export async function runCommand(options: RunOptions): Promise<string> {
       // C++ 项目需要先构建
       const buildDir = path.join(projectDir, 'build')
       const projectName = path.basename(projectDir)
-      const executableName = projectName.replace(/[^a-zA-Z0-9_\-]/g, '').replace(/\-+/g, '_')
+      const executableName = projectName.replace(/[^a-zA-Z0-9_-]/g, '').replace(/-+/g, '_')
       const executablePath = path.join(buildDir, executableName)
       
       // 检查是否已构建
@@ -51,13 +52,13 @@ export async function runCommand(options: RunOptions): Promise<string> {
       args = ['src/index.js']
       const jsEntry = path.join(projectDir, 'src', 'index.js')
       try {
-        if (!require('fs').existsSync(jsEntry)) {
-          require('fs').mkdirSync(path.dirname(jsEntry), { recursive: true })
-          require('fs').writeFileSync(jsEntry, `function main(){ console.log('hello') }\nif (typeof require !== 'undefined' && require.main === module){ main() }\n`, 'utf-8')
+        if (!fs.existsSync(jsEntry)) {
+          fs.mkdirSync(path.dirname(jsEntry), { recursive: true })
+          fs.writeFileSync(jsEntry, `function main(){ console.log('hello') }\nif (typeof require !== 'undefined' && require.main === module){ main() }\n`, 'utf-8')
           log.info(`已创建入口: ${jsEntry}`)
         }
-      } catch {}
-      if (!require('fs').existsSync(jsEntry)) {
+      } catch (_e) { /* Ignore entry file creation errors */ }
+      if (!fs.existsSync(jsEntry)) {
         args = ['-e', 'console.log("hello")']
       }
     }
@@ -73,7 +74,7 @@ export async function runCommand(options: RunOptions): Promise<string> {
       await new Promise<void>((resolve) => setTimeout(resolve, 500))
       try {
         await new Promise<void>((resolve) => {
-          const req = require('http').get({ host: '127.0.0.1', port, path: '/health' }, (res: IncomingMessage) => {
+          const req = http.get({ host: '127.0.0.1', port, path: '/health' }, (res: IncomingMessage) => {
             res.setEncoding('utf-8')
             let body = ''
             res.on('data', (chunk: string) => { body += chunk })
@@ -81,8 +82,8 @@ export async function runCommand(options: RunOptions): Promise<string> {
           })
           req.on('error', () => resolve())
         })
-      } catch {}
-      try { proc.kill() } catch {}
+      } catch (_e) { /* Ignore health check errors */ }
+      try { proc.kill() } catch (_e) { /* Ignore kill errors */ }
     } else {
       await new Promise<void>((resolve, reject) => {
         proc.on('exit', (code) => {
@@ -99,7 +100,7 @@ export async function runCommand(options: RunOptions): Promise<string> {
       fs.mkdirSync(path.dirname(p), { recursive: true })
       fs.writeFileSync(p, output, 'utf-8')
       log.info(`运行输出已写入: ${p}`)
-    } catch {}
+    } catch (_e) { /* Ignore output file write errors */ }
     return output
   } catch (error) {
     handleError(error, { command: 'run' })

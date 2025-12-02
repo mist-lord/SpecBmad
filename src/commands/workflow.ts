@@ -1,6 +1,7 @@
 import { log } from '@/utils/logger';
 import path from 'path';
 import fs from 'fs';
+import yaml from 'yaml';
 import { Orchestrator } from '@/workflow/orchestrator';
 import { config } from '@/utils/config';
 import { PATHS, getProjectPath, getArtifactsPath } from '@/utils/paths';
@@ -218,7 +219,7 @@ export async function workflowCommand(options: WorkflowOptions): Promise<void> {
             nextSteps: r.nextSteps || []
           }))
         };
-        const y = require('yaml').stringify(summary);
+        const y = yaml.stringify(summary);
         fs.writeFileSync(outPath, y, 'utf-8');
         const dashMd = renderLlmUsageDashboard(results);
         const dashPath = path.join(path.dirname(outPath), 'llm-dashboard.md');
@@ -252,7 +253,7 @@ export async function workflowCommand(options: WorkflowOptions): Promise<void> {
           const p: any = pluginManager.getPlugin(name)
           if (p && p.isEnabled()) p.indexArtifacts(process.cwd())
         }
-      } catch {}
+      } catch (_e) { /* Ignore plugin indexing errors */ }
     } else {
       // 摘要输出（截断），提示可用 --output / --report-dir
       const preview =
@@ -283,7 +284,7 @@ export async function workflowCommand(options: WorkflowOptions): Promise<void> {
             nextSteps: r.nextSteps || []
           }))
         };
-        const y = require('yaml').stringify(summary);
+        const y = yaml.stringify(summary);
         const linesY = y.split('\n');
         for (const line of linesY.slice(0, 30)) {
           log.info(line);
@@ -317,7 +318,7 @@ export async function workflowCommand(options: WorkflowOptions): Promise<void> {
           const p: any = pluginManager.getPlugin(name)
           if (p && p.isEnabled()) p.indexArtifacts(process.cwd())
         }
-      } catch {}
+      } catch (_e) { /* Ignore plugin indexing errors */ }
     }
 
     log.success(`工作流结果摘要已写入: ${outPath}`);

@@ -59,7 +59,7 @@ export async function runInitWizard(defaultName?: string): Promise<WizardResult>
       type: 'list',
       name: 'language',
       message: '选择编程语言:',
-      choices: (answers) => {
+      choices: (_answers) => {
         // 根据项目类型推荐语言
         if (basic.projectType === 'cli') return ['typescript', 'python', 'cpp', 'go', 'rust'];
         if (basic.projectType === 'api') return ['typescript', 'python', 'go'];

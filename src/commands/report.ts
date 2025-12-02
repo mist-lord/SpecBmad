@@ -142,7 +142,6 @@ export const reportCommand = new Command('report')
         } as any;
         outputContent = YAML.stringify(jsonOut);
       } else if (options.format === 'html') {
-        const mdPreview = `# 最新运行报告\n\n生成时间: ${dateStr}\n`;
         const html = `<!doctype html><html><head><meta charset="utf-8"><title>最新运行报告</title><style>body{font-family:system-ui,Segoe UI,Arial,sans-serif;padding:24px}code{background:#f6f8fa;padding:2px 4px;border-radius:3px}pre{background:#f6f8fa;padding:12px;border-radius:6px;overflow:auto}</style></head><body><h1>最新运行报告</h1><p>生成时间: ${dateStr}</p><h2>产物存在性检查</h2><ul><li>analysis.json: ${existsMap.analysis ? '✅' : '❌'}</li><li>planning.json: ${existsMap.planning ? '✅' : '❌'}</li><li>solution.json: ${existsMap.solution ? '✅' : '❌'}</li><li>bmm.json: ${existsMap.bmm ? '✅' : '❌'}</li></ul><p>产物目录: <code>${artifactsDir}</code></p><h2>项目结构概览</h2><ul>${projExists ? projEntries.slice(0,20).map(e=>`<li>${e}</li>`).join('') : '<li>未发现生成项目目录</li>'}</ul>${projDocsExists ? `<p>项目说明书: <code>${projDocsPath}</code></p>` : ''}${runOutputExists ? `<h2>运行输出片段</h2><pre>${escapeHtml(runOutput.slice(0,500))}</pre>` : ''}<h2>分析概览</h2><pre>${escapeHtml(summarizeSection('analysis', analysis))}</pre><h2>规划概览</h2><pre>${escapeHtml(summarizeSection('planning', planning))}</pre><h2>解决方案概览</h2><pre>${escapeHtml(summarizeSection('solution', solution))}</pre><h2>商业模型概览</h2><pre>${escapeHtml(summarizeSection('bmm', bmm))}</pre></body></html>`;
         outputContent = html;
       } else {

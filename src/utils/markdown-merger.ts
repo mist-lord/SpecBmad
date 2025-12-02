@@ -1,4 +1,4 @@
-import { log } from '@/utils/logger';
+// import { log } from '@/utils/logger'; // Unused
 
 export class MarkdownMerger {
 
@@ -18,8 +18,8 @@ export class MarkdownMerger {
   /**
    * 添加一个新章节
    */
-  static async addSection(markdown: string, title: string, content: string, level: number = 2, parentTitle?: string): Promise<string> {
-    const { unified, remarkParse, remarkStringify, visit, toString } = await this.getTools();
+  static async addSection(markdown: string, title: string, content: string, _level: number = 2, parentTitle?: string): Promise<string> {
+    const { unified, remarkParse, remarkStringify, toString } = await this.getTools();
     const processor = unified().use(remarkParse).use(remarkStringify);
     
     const tree = processor.parse(markdown);
@@ -136,7 +136,7 @@ export class MarkdownMerger {
   /**
    * 移除章节
    */
-  static async removeSection(markdown: string, title: string, level: number = 2): Promise<string> {
+  static async removeSection(markdown: string, title: string, _level: number = 2): Promise<string> {
     const { unified, remarkParse, remarkStringify, toString } = await this.getTools();
     const processor = unified().use(remarkParse).use(remarkStringify);
     

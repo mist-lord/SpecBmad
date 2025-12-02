@@ -86,7 +86,7 @@ export async function implementCommand(options: ImplementOptions): Promise<void>
     }
 
     const projectDir = path.join(process.cwd(), 'generated', 'project');
-    const { PATHS, getArtifactsPath } = await import('@/utils/paths');
+    const { getArtifactsPath } = await import('@/utils/paths');
     const tasksPath = getArtifactsPath('tasks.md');
     const tasksMd = readTasksMarkdown(tasksPath);
     let files: string[] = [];
@@ -109,7 +109,7 @@ export async function implementCommand(options: ImplementOptions): Promise<void>
           }
         }
         files.push(...extra);
-      } catch {}
+      } catch (_e) { /* Ignore CJS conversion errors */ }
       try {
         const pkg = path.join(projectDir, 'package.json');
         if (fs.existsSync(pkg)) {
@@ -119,7 +119,7 @@ export async function implementCommand(options: ImplementOptions): Promise<void>
           obj.scripts.test = 'node tests/run-tests.js';
           fs.writeFileSync(pkg, JSON.stringify(obj, null, 2), 'utf-8');
         }
-      } catch {}
+      } catch (_e) { /* Ignore package.json update errors */ }
       writeConsistencyReport(process.cwd(), {
         files,
         tests,

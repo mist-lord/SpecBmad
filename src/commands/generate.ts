@@ -52,7 +52,7 @@ export async function generateCommand(options: GenerateOptions): Promise<void> {
           fs.mkdirSync(path.dirname(jsEntry), { recursive: true })
           fs.writeFileSync(jsEntry, `function main(){ console.log('hello') }\nif (typeof require !== 'undefined' && require.main === module){ main() }\n`, 'utf-8')
         }
-      } catch {}
+      } catch (_e) { /* Ignore entry file creation errors */ }
     }
 
     if (options.autoImplement && !options.dryRun) {

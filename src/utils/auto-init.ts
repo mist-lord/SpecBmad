@@ -4,7 +4,7 @@ import { log } from './logger';
 import { ConfigManager } from './config';
 import { ProjectStatusManager } from '@/core/project/status';
 import { ConfigMigrator } from './config-migrator';
-import { LEGACY_PATHS } from './paths';
+import { _LEGACY_PATHS } from './paths';
 import { PATHS, getProjectPath } from './paths';
 import chalk from 'chalk';
 

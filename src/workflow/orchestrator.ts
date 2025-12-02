@@ -6,7 +6,6 @@ import { registerBuiltInAgents } from '@/agents';
 import { config } from '@/utils/config';
 import { PATHS, getProjectPath } from '@/utils/paths';
 import fs from 'fs';
-import path from 'path';
 import { PerformanceObserver } from 'perf_hooks'
 
 export interface WorkflowStepConfig {

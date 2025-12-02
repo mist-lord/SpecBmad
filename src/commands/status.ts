@@ -1,5 +1,5 @@
 import { log } from '@/utils/logger';
-import { projectStatus, ProjectStatusManager } from '@/core/project/status';
+import { ProjectStatusManager } from '@/core/project/status';
 import chalk from 'chalk';
 
 interface StatusOptions {

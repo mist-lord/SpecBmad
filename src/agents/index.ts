@@ -4,7 +4,6 @@ import { registerQAAgent } from '@/agents/qa';
 import { registerAnalystAgent } from '@/agents/analyst';
 import { registerArchitectAgent } from '@/agents/architect';
 import { AgentFactory } from '@/agents/factory';
-import { ScrumMasterAgent } from '@/agents/scrum-master';
 import { AnalystAgent } from '@/agents/analyst';
 import { DeveloperAgent } from '@/agents/developer';
 import { ArchitectAgent } from '@/agents/architect';

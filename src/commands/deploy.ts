@@ -182,7 +182,7 @@ export async function deployCommand(options: DeployOptions): Promise<void> {
       const relFile = path.join(releasesDir, `${options.tag || stamp}.json`);
       fs.writeFileSync(relFile, JSON.stringify({ env, strategy, tag: options.tag || '', artifact: outPath, ts: new Date().toISOString() }, null, 2), 'utf-8');
       log.info(`发布工件已生成: ${relFile}`);
-    } catch {}
+    } catch (_e) { /* Ignore release file write errors */ }
   } catch (error) {
     handleError(error, { command: 'deploy' });
     throw error;

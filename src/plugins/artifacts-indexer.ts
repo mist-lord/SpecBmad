@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import { BasePlugin, PluginConfig } from '@/core/plugin/base'
 import { log } from '@/utils/logger'
-import { PATHS, getProjectPath } from '@/utils/paths'
+import { PATHS } from '@/utils/paths'
 
 export class ArtifactsIndexerPlugin extends BasePlugin {
   constructor(config: PluginConfig) { super(config) }

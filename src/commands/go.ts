@@ -4,6 +4,7 @@ import { handleError } from '@/utils/error';
 import { ensureProjectInitialized, autoConfigureLLM } from '@/utils/auto-init';
 import { workflowCommand } from './workflow';
 import { PATHS } from '@/utils/paths';
+import path from 'path';
 import chalk from 'chalk';
 
 interface GoOptions {
@@ -44,7 +45,7 @@ export async function goCommand(text: string, options: GoOptions = {}): Promise<
       const fs = await import('fs');
       const { getProjectPath } = await import('@/utils/paths');
       const requirementsPath = getProjectPath(`${PATHS.SPECIFICATIONS_DIR}/requirements.md`);
-      fs.mkdirSync(require('path').dirname(requirementsPath), { recursive: true });
+      fs.mkdirSync(path.dirname(requirementsPath), { recursive: true });
       fs.writeFileSync(requirementsPath, `# 项目需求\n\n${text}\n`, 'utf-8');
       log.debug(`需求已保存到: ${requirementsPath}`);
     }
