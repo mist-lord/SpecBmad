@@ -1,8 +1,8 @@
 import { log } from '@/utils/logger';
 import { LLMClientFactory } from './base';
-import { createClaudeClient } from './claude';
-import { createOpenAIClient } from './openai';
-import { createMockLLMClient } from './mock';
+import { createClaudeClient } from './clients/claude';
+import { createOpenAIClient } from './clients/openai';
+import { createMockLLMClient } from './clients/mock';
 import { ConfigManager, getProjectConfig } from '@/utils/config';
 import { AgentType, LLMClient } from '@/types';
 

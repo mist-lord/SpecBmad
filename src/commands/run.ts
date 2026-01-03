@@ -13,6 +13,7 @@ interface RunOptions {
   python?: string
   args?: string
   port?: number
+  outputFile?: string
 }
 
 export async function runCommand(options: RunOptions): Promise<string> {
@@ -96,11 +97,11 @@ export async function runCommand(options: RunOptions): Promise<string> {
     const sample = perf.end('run')
     log.success(`程序运行完成 (用时 ${sample.durationMs.toFixed(0)}ms)`) 
     try {
-      const p = path.join(process.cwd(), 'docs', 'run-output.txt')
+      const p = options.outputFile || path.join(process.cwd(), 'docs', 'run-output.txt')
       fs.mkdirSync(path.dirname(p), { recursive: true })
       fs.writeFileSync(p, output, 'utf-8')
-      log.info(`运行输出已写入: ${p}`)
-    } catch (_e) { /* Ignore output file write errors */ }
+      log.info(`输出已记录到: ${p}`)
+    } catch (_e) { /* Ignore log creation errors */ }
     return output
   } catch (error) {
     handleError(error, { command: 'run' })

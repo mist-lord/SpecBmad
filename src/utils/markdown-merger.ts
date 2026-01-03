@@ -28,7 +28,7 @@ export class MarkdownMerger {
     // 构建新的 Heading 节点
     const newHeadingNode = {
       type: 'heading',
-      depth: level,
+      depth: _level,
       children: [{ type: 'text', value: title }]
     };
     

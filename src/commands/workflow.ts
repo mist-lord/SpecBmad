@@ -2,7 +2,7 @@ import { log } from '@/utils/logger';
 import path from 'path';
 import fs from 'fs';
 import yaml from 'yaml';
-import { Orchestrator } from '@/workflow/orchestrator';
+import { Orchestrator } from '@/core/workflow/orchestrator';
 import { config } from '@/utils/config';
 import { PATHS, getProjectPath, getArtifactsPath } from '@/utils/paths';
 import { AgentContext, AgentResult } from '@/types';
@@ -24,6 +24,7 @@ interface WorkflowOptions {
   output?: string;
   format?: 'json' | 'markdown' | 'yaml';
   reportDir?: string;
+  runDir?: string;
   datePrefix?: boolean;
   dedupe?: boolean;
   resume?: boolean;
@@ -64,32 +65,60 @@ export async function workflowCommand(options: WorkflowOptions): Promise<void> {
       };
 
       try {
+        const runRoot = options.runDir || process.cwd();
+        const specsDir = options.runDir ? path.join(runRoot, 'specs') : getProjectPath(PATHS.SPECIFICATIONS_DIR);
+        const artifactsDir = options.reportDir || (options.runDir ? path.join(runRoot, 'artifacts') : getProjectPath(PATHS.ARTIFACTS_DIR));
+        
         tracer.start('specify');
-        await specifyCommand({ interactive: false, template: 'standard', agent: 'Analyst', output: getArtifactsPath('requirements.md') });
+        await specifyCommand({ 
+          interactive: false, 
+          template: 'standard', 
+          agent: 'Analyst', 
+          output: path.join(specsDir, 'requirements.md') 
+        });
         tracer.end('specify');
         writeState('running', 'specify');
 
         tracer.start('tasks');
-        await tasksCommand({ goal: '根据需求规格拆解任务', format: 'markdown', reportDir: PATHS.ARTIFACTS_DIR });
+        await tasksCommand({ 
+          goal: '根据需求规格拆解任务', 
+          format: 'markdown', 
+          reportDir: artifactsDir 
+        });
         tracer.end('tasks');
         writeState('running', 'tasks');
 
         tracer.start('implement');
-        await implementCommand({ task: 'core-feature', review: true, format: 'markdown', reportDir: PATHS.ARTIFACTS_DIR });
+        await implementCommand({ 
+          task: 'core-feature', 
+          review: true, 
+          format: 'markdown', 
+          reportDir: artifactsDir 
+        });
         tracer.end('implement');
         writeState('running', 'implement');
 
         tracer.start('qa');
-        await qaCommand({ type: 'unit', format: 'markdown', reportDir: PATHS.ARTIFACTS_DIR });
+        await qaCommand({ 
+          type: 'unit', 
+          format: 'markdown', 
+          reportDir: artifactsDir 
+        });
         tracer.end('qa');
         writeState('running', 'qa');
 
         tracer.start('deploy');
-        await deployCommand({ env: 'dev', strategy: 'rolling', dryRun: true, format: 'json', reportDir: PATHS.ARTIFACTS_DIR });
+        await deployCommand({ 
+          env: 'dev', 
+          strategy: 'rolling', 
+          dryRun: true, 
+          format: 'json', 
+          reportDir: artifactsDir 
+        });
         tracer.end('deploy');
         writeState('completed', 'deploy');
 
-        log.success('核心命令链式执行完成 (specify → tasks → implement → qa → deploy)');
+        log.success(`核心命令链式执行完成 (产物目录: ${artifactsDir})`);
         return;
       } catch (e) {
         handleError(e, { command: 'workflow', phase: 'core-cli' });
@@ -131,6 +160,13 @@ export async function workflowCommand(options: WorkflowOptions): Promise<void> {
     }
 
     const projectConfig = config.getAll();
+    const runRoot = options.runDir || process.cwd();
+    const artifactsDir = options.reportDir || (options.runDir ? path.join(runRoot, 'artifacts') : getProjectPath(PATHS.ARTIFACTS_DIR));
+    const codeDir = options.runDir ? path.join(runRoot, 'code') : path.join(process.cwd(), 'generated', 'project');
+    const docsDir = options.runDir ? path.join(runRoot, 'docs') : path.join(process.cwd(), 'docs');
+    const logsDir = options.runDir ? path.join(runRoot, 'logs') : path.join(process.cwd(), 'docs');
+    const logFile = path.join(logsDir, 'run-output.txt');
+
     const context: AgentContext = {
       projectState: {
         projectName: projectConfig.projectName || 'SpecKit-BMAD项目',
@@ -139,18 +175,16 @@ export async function workflowCommand(options: WorkflowOptions): Promise<void> {
           completedSteps: initialCompleted
         }
       },
-      workingDirectory: process.cwd(),
+      workingDirectory: runRoot,
       inputData: {}
     };
 
     const results: AgentResult[] = await orchestrator.executeWorkflow(normalizedName, context, format);
 
     if (normalizedName === 'full-development') {
-      const defaultOut = path.join(process.cwd(), 'generated', 'project')
-      const defaultDocs = path.join(process.cwd(), 'docs')
-      await generateCommand({ stack: 'ts-app', out: defaultOut, docOut: defaultDocs })
+      await generateCommand({ stack: 'ts-app', out: codeDir, docOut: docsDir, reportDir: artifactsDir })
       if (options.autoRun) {
-        await runCommand({ dir: defaultOut, stack: 'ts-app' })
+        await runCommand({ dir: codeDir, stack: 'ts-app' })
       }
     }
 

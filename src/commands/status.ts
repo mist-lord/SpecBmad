@@ -37,7 +37,7 @@ function displayBasicStatus(status: Awaited<ReturnType<ProjectStatusManager['get
   
   // 项目信息
   log.info(chalk.cyan('项目信息:'));
-  log.info(`  名称: ${status.project.name || '未命名'}`);
+  log.info(`  项目: ${status.project.name || '未命名'}`);
   log.info(`  版本: ${status.project.version || '0.1.0'}`);
   log.info(`  状态: ${getStatusEmoji(status.health)} ${status.health}`);
   

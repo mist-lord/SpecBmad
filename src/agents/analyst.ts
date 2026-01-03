@@ -108,8 +108,15 @@ Provide a comprehensive analysis including:
 Return the output in markdown with clear headings and bullet lists.`,
       brainstorm: `
 Provide varied ideas and angles to explore the problem space. Include at least 10 bullets for opportunities, risks, and research directions. Use markdown headings.`,
+      risk: `
+Identify potential technical, business, and operational risks. Provide mitigation strategies for each.`,
       research: `
-Outline what information is needed and propose a research plan with steps, expected outcomes, and data sources. Use markdown headings.`
+Analyze the provided technical research papers, complex algorithms, or deep specifications.
+1) Extract core logic and mathematical foundations
+2) Map algorithms to software architecture
+3) Identify implementation challenges (performance, complexity)
+4) Suggest verification/testing strategy for accuracy
+Return a deep technical analysis in markdown.`
     } as Record<string, string>;
 
     return `${base}\n${sections[mode] || sections['brief']}`;

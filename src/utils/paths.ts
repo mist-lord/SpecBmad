@@ -52,6 +52,11 @@ export const PATHS = {
   STATUS_FILE: '.specbmad/status.json',
   
   /**
+   * 运行记录目录
+   */
+  RUNS_DIR: '.specbmad/runs',
+  
+  /**
    * 模板目录
    */
   TEMPLATES_DIR: 'templates',
@@ -81,6 +86,13 @@ export function getConfigPath(relativePath: string): string {
  */
 export function getArtifactsPath(relativePath: string): string {
   return path.join(process.cwd(), PATHS.ARTIFACTS_DIR, relativePath);
+}
+
+/**
+ * 获取运行记录目录下的完整路径
+ */
+export function getRunPath(runId: string, subPath: string = ''): string {
+  return path.join(process.cwd(), PATHS.RUNS_DIR, runId, subPath);
 }
 
 /**

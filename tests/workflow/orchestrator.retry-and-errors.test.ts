@@ -1,4 +1,4 @@
-import { Orchestrator } from '../../src/workflow/orchestrator';
+import { Orchestrator } from '../../src/core/workflow/orchestrator';
 import { AgentContext, AgentResult } from '../../src/types';
 
 // Mock LLM manager to avoid real API calls

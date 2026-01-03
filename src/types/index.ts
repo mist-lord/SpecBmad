@@ -207,6 +207,8 @@ export enum WorkflowStatus {
 export interface AgentContext {
   projectState: {
     projectName: string;
+    stack?: string;
+    type?: string;
     workflow: {
       currentStep: string;
       completedSteps: string[];

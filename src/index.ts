@@ -34,6 +34,7 @@ import { constitutionCommand } from '@/commands/constitution';
 import { pluginsCommand } from '@/commands/plugins';
 import { goCommand } from '@/commands/go';
 import { changeCommand } from '@/commands/change';
+import { exportCommand } from '@/commands/export';
 import { uiCommand } from '@/commands/ui';
 import { doctorCommand } from '@/commands/doctor';
 import { registerBuiltInStacks } from '@/core/stack';
@@ -97,12 +98,27 @@ program
 // 一键命令（简化使用流程）
 program
   .command('go')
-  .description('🚀 一键生成项目：从需求到代码的完整流程（自动初始化，零配置）')
-  .argument('<需求描述>', '项目需求描述')
-  .option('--auto-run', '生成后自动运行')
-  .option('-f, --format <fmt>', '输出格式 (json|markdown|yaml)', 'markdown')
-  .option('--silent', '静默模式，减少输出')
-  .action(goCommand);
+  .description('🚀 一键生成项目：从需求到代码的完整流程')
+  .argument('<text>', '项目需求描述')
+  .option('-r, --run', '生成后自动运行项目', false)
+  .option('-v, --review', '开启人工审查模式 (在代码实现前暂停)', false)
+  .option('-d, --deep', '开启深度开发模式 (复杂算法/科研复现)', false)
+  .action((text, options) => {
+    // 映射短参数到 goCommand 预期的长参数
+    return goCommand(text, options);
+  });
+
+// 变更管理
+program.addCommand(changeCommand);
+
+// 导出与集成
+program.addCommand(exportCommand);
+
+// Web 仪表盘
+program.addCommand(uiCommand);
+
+// 系统诊断
+program.addCommand(doctorCommand);
 
 // BMAD-Method 工作流命令
 program.addCommand(analyzeCommand);
@@ -112,9 +128,6 @@ program.addCommand(bmmCommand);
 
 // 汇总报告命令
 program.addCommand(reportCommand);
-program.addCommand(changeCommand);
-program.addCommand(uiCommand);
-program.addCommand(doctorCommand);
 
 // Spec-Kit 工作流命令
 program.addCommand(constitutionCommand);

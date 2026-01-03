@@ -1,0 +1,21 @@
+[
+  {
+    "specPath": "user-auth.md",
+    "changes": [
+      {
+        "type": "ADDED",
+        "requirement": "OAuth Support",
+        "content": "System must support Google and GitHub login.",
+        "scenarios": [
+          "User clicks Google Login",
+          "System redirects to OAuth provider"
+        ]
+      },
+      {
+        "type": "MODIFIED",
+        "requirement": "Login",
+        "content": "User needs to provide email, password, and optionally a 2FA code."
+      }
+    ]
+  }
+]

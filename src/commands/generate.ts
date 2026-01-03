@@ -14,6 +14,7 @@ interface GenerateOptions {
   template?: string
   out?: string
   docOut?: string
+  reportDir?: string
   autoImplement?: boolean
   qa?: boolean
   format?: 'markdown' | 'json'
@@ -37,6 +38,8 @@ export async function generateCommand(options: GenerateOptions): Promise<void> {
     const cwd = process.cwd()
     const outDir = options.out ? (path.isAbsolute(options.out) ? options.out : path.join(cwd, options.out)) : path.join(cwd, 'generated', 'project')
     const docDir = options.docOut ? (path.isAbsolute(options.docOut) ? options.docOut : path.join(cwd, options.docOut)) : path.join(cwd, 'docs')
+    const reportDir = options.reportDir || path.join(process.cwd(), '.specbmad', 'artifacts')
+    
     const hints = extractInputHints(options.input)
     const stack = options.stack || hints.preferredStack || 'ts-app'
     const projectName = path.basename(outDir)
@@ -56,11 +59,11 @@ export async function generateCommand(options: GenerateOptions): Promise<void> {
     }
 
     if (options.autoImplement && !options.dryRun) {
-      await implementCommand({ task: 'core-feature', review: true, format: 'markdown', reportDir: path.join('.bmad', 'artifacts') })
+      await implementCommand({ task: 'core-feature', review: true, format: 'markdown', reportDir })
     }
 
     if (options.qa && !options.dryRun) {
-      await qaCommand({ type: 'unit', format: 'markdown', reportDir: path.join('.bmad', 'artifacts') })
+      await qaCommand({ type: 'unit', format: 'markdown', reportDir })
     }
     const docSummaryMd = `# 项目说明书\n\n- 名称: ${projectName}\n- 栈: ${stack}\n- 输入: ${options.input || '无'}\n- 模板: ${options.template || '默认'}\n- 运行模式: ${hints.runMode || '未指定'}\n`
     writeFile(path.join(docDir, '项目说明书.md'), docSummaryMd, options.dryRun)

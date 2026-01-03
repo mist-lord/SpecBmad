@@ -18,27 +18,27 @@ export const uiCommand = new Command('ui')
     // 静态文件托管逻辑
     if (!isDev) {
       // 尝试定位前端构建产物
-      // 假设在 dist/client (相对于 CLI 执行入口或安装位置)
+      // 假设在 dist/ui (相对于 CLI 执行入口或安装位置)
       // 在开发源码中: src/commands/ui/index.ts -> 编译后: dist/commands/ui/index.js
-      // 前端构建: client/dist -> 复制到: dist/client
+      // 前端构建: ui/dist -> 复制到: dist/ui
       
-      // 我们需要确定 dist 根目录
+      // 我们 need 确定 dist 根目录
       const distRoot = path.resolve(__dirname, '../../'); 
-      const clientDist = path.join(distRoot, 'client');
+      const uiDist = path.join(distRoot, 'ui');
       
       log.info(`DEBUG: __dirname = ${__dirname}`);
       log.info(`DEBUG: distRoot = ${distRoot}`);
-      log.info(`DEBUG: clientDist = ${clientDist}`);
+      log.info(`DEBUG: uiDist = ${uiDist}`);
 
-      if (fs.existsSync(clientDist)) {
-        log.info(`托管静态文件: ${clientDist}`);
+      if (fs.existsSync(uiDist)) {
+        log.info(`托管静态文件: ${uiDist}`);
         
         // 1. 静态资源
-        app.use(express.static(clientDist));
+        app.use(express.static(uiDist));
         
         // 2. 显式处理根路径 (Debug Mode: Force read)
         app.get('/', (req, res) => {
-          const indexPath = path.join(clientDist, 'index.html');
+          const indexPath = path.join(uiDist, 'index.html');
           if (fs.existsSync(indexPath)) {
             res.type('html').send(fs.readFileSync(indexPath, 'utf-8'));
           } else {
@@ -50,7 +50,7 @@ export const uiCommand = new Command('ui')
         app.use((req, res, next) => {
           if (req.path.startsWith('/api')) return next();
           
-          const indexPath = path.join(clientDist, 'index.html');
+          const indexPath = path.join(uiDist, 'index.html');
           if (fs.existsSync(indexPath)) {
             res.type('html').send(fs.readFileSync(indexPath, 'utf-8'));
           } else {
@@ -58,8 +58,8 @@ export const uiCommand = new Command('ui')
           }
         });
       } else {
-        log.warn(`未找到前端构建产物 (${clientDist})。仅提供 API 服务。`);
-        log.info(`开发建议: cd client && npm run dev`);
+        log.warn(`未找到前端构建产物 (${uiDist})。仅提供 API 服务。`);
+        log.info(`开发建议: cd ui && npm run dev`);
       }
     }
 

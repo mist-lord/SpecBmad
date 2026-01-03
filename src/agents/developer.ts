@@ -17,8 +17,9 @@ export class DeveloperAgent extends BaseAgent {
     const taskId: string | undefined = context.inputData?.task || undefined;
     const file: string | undefined = context.inputData?.file || undefined;
     const review: boolean = !!context.inputData?.review;
+    const specialist: string | undefined = context.inputData?.specialist; // e.g., 'web', 'backend', 'algorithm'
 
-    const prompt = this.buildImplementationPrompt(context, taskId, file, review);
+    const prompt = this.buildImplementationPrompt(context, taskId, file, review, specialist);
     const options: LLMOptions = {
       model: undefined,
       temperature: review ? 0.3 : 0.2,
@@ -43,13 +44,22 @@ export class DeveloperAgent extends BaseAgent {
     };
   }
 
-  private buildImplementationPrompt(context: AgentContext, taskId?: string, file?: string, review?: boolean): string {
+  private buildImplementationPrompt(context: AgentContext, taskId?: string, file?: string, review?: boolean, specialist?: string): string {
     const projectName = context.projectState?.projectName || 'Unnamed Project';
-    const base = `You are a senior Software Developer.\nProject: ${projectName}\nTask: ${taskId || 'N/A'}\nTarget file: ${file || 'TBD'}\nMode: ${review ? 'review + implement' : 'implement'}\nFollow BMAD-Method implementation and TDD best practices. Return markdown with clear steps.`;
+    const base = `You are a senior Software Developer${specialist ? ` specialized in ${specialist}` : ''}.\nProject: ${projectName}\nTask: ${taskId || 'N/A'}\nTarget file: ${file || 'TBD'}\nMode: ${review ? 'review + implement' : 'implement'}\nFollow BMAD-Method implementation and TDD best practices. Return markdown with clear steps.`;
+
+    let specializedGuidance = '';
+    if (specialist === 'web') {
+      specializedGuidance = '\nFocus on: UI/UX responsiveness, modern frontend frameworks, accessibility, and component modularity.';
+    } else if (specialist === 'backend') {
+      specializedGuidance = '\nFocus on: API scalability, security, database optimization, and error resilience.';
+    } else if (specialist === 'algorithm') {
+      specializedGuidance = '\nFocus on: Mathematical correctness, algorithmic efficiency (Big O), and numerical stability. Refer to the Paper2Code methodology.';
+    }
 
     const sections = `
 Include:
-- Brief restatement of the task and acceptance criteria
+- Brief restatement of the task and acceptance criteria${specializedGuidance}
 - Design notes and key decisions
 - Step-by-step implementation plan (small commits mindset)
 - TDD cycle: write test -> implement -> refactor

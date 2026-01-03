@@ -1,0 +1,54 @@
+{
+  "projectName": "SpecKit-BMAD项目",
+  "spec_kit": {
+    "ai_agent": "OpenAI",
+    "enabled": true
+  },
+  "agents": {
+    "Mock": {
+      "type": "mock",
+      "enabled": true
+    },
+    "Claude": {
+      "type": "claude",
+      "enabled": false,
+      "apiKey": ""
+    },
+    "OpenAI": {
+      "type": "openai",
+      "enabled": true,
+      "apiKey": "",
+      "baseUrl": "https://openai.weavex.tech/v1/chat/completions"
+    }
+  },
+  "bmad_method": {
+    "enabled": true
+  },
+  "llmCacheEnabled": false,
+  "workflows": {
+    "e2e-flaky": {
+      "description": "E2E: flaky first step, retry second",
+      "steps": [
+        {
+          "id": "s1",
+          "name": "Flaky-first-fails",
+          "agent": "Flaky",
+          "input": {
+            "stepId": "s1",
+            "retries": 0
+          }
+        },
+        {
+          "id": "s2",
+          "name": "Flaky-with-retry",
+          "agent": "Flaky",
+          "input": {
+            "stepId": "s2",
+            "retries": 1,
+            "retryDelayMs": 1
+          }
+        }
+      ]
+    }
+  }
+}

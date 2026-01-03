@@ -1,0 +1,287 @@
+{
+  "workflow": "full-development",
+  "currentStep": "qa-validation",
+  "completedSteps": [
+    "sprint-plan",
+    "story-refine",
+    "implementation",
+    "qa-validation"
+  ],
+  "status": "completed",
+  "updatedAt": "2025-12-22T23:10:01.327Z",
+  "resourceSamples": [
+    {
+      "ts": "2025-12-18T14:34:36.872Z",
+      "phase": "persist",
+      "stepId": "sprint-plan",
+      "memory": {
+        "rss": 403824640,
+        "heapTotal": 301625344,
+        "heapUsed": 206962376,
+        "external": 8731803,
+        "arrayBuffers": 5131971
+      },
+      "cpu": {
+        "user": 9560450,
+        "system": 1689615
+      },
+      "gc": {
+        "count": 0,
+        "totalDurationMs": 0,
+        "kinds": {}
+      }
+    },
+    {
+      "ts": "2025-12-18T14:34:36.873Z",
+      "phase": "persist",
+      "stepId": "story-refine",
+      "memory": {
+        "rss": 403828736,
+        "heapTotal": 301625344,
+        "heapUsed": 207037512,
+        "external": 8731803,
+        "arrayBuffers": 5131971
+      },
+      "cpu": {
+        "user": 9561174,
+        "system": 1690060
+      },
+      "gc": {
+        "count": 0,
+        "totalDurationMs": 0,
+        "kinds": {}
+      }
+    },
+    {
+      "ts": "2025-12-18T14:34:36.873Z",
+      "phase": "persist",
+      "stepId": "story-refine",
+      "memory": {
+        "rss": 403832832,
+        "heapTotal": 301625344,
+        "heapUsed": 207045896,
+        "external": 8731803,
+        "arrayBuffers": 5131971
+      },
+      "cpu": {
+        "user": 9561307,
+        "system": 1690279
+      },
+      "gc": {
+        "count": 0,
+        "totalDurationMs": 0,
+        "kinds": {}
+      }
+    },
+    {
+      "ts": "2025-12-22T13:48:00.051Z",
+      "phase": "persist",
+      "stepId": "sprint-plan",
+      "memory": {
+        "rss": 92647424,
+        "heapTotal": 37552128,
+        "heapUsed": 19599856,
+        "external": 2639235,
+        "arrayBuffers": 43223
+      },
+      "cpu": {
+        "user": 645022,
+        "system": 198493
+      },
+      "gc": {
+        "count": 0,
+        "totalDurationMs": 0,
+        "kinds": {}
+      }
+    },
+    {
+      "ts": "2025-12-22T13:48:00.956Z",
+      "phase": "persist",
+      "stepId": "story-refine",
+      "memory": {
+        "rss": 92651520,
+        "heapTotal": 37552128,
+        "heapUsed": 19851552,
+        "external": 2639291,
+        "arrayBuffers": 43239
+      },
+      "cpu": {
+        "user": 649242,
+        "system": 199806
+      },
+      "gc": {
+        "count": 0,
+        "totalDurationMs": 0,
+        "kinds": {}
+      }
+    },
+    {
+      "ts": "2025-12-22T13:48:01.860Z",
+      "phase": "persist",
+      "stepId": "implementation",
+      "memory": {
+        "rss": 92704768,
+        "heapTotal": 37552128,
+        "heapUsed": 20161376,
+        "external": 2639291,
+        "arrayBuffers": 43239
+      },
+      "cpu": {
+        "user": 653329,
+        "system": 200756
+      },
+      "gc": {
+        "count": 0,
+        "totalDurationMs": 0,
+        "kinds": {}
+      }
+    },
+    {
+      "ts": "2025-12-22T13:48:02.765Z",
+      "phase": "persist",
+      "stepId": "qa-validation",
+      "memory": {
+        "rss": 92737536,
+        "heapTotal": 37552128,
+        "heapUsed": 20437632,
+        "external": 2647483,
+        "arrayBuffers": 51431
+      },
+      "cpu": {
+        "user": 657558,
+        "system": 201678
+      },
+      "gc": {
+        "count": 0,
+        "totalDurationMs": 0,
+        "kinds": {}
+      }
+    },
+    {
+      "ts": "2025-12-22T13:48:02.765Z",
+      "phase": "persist",
+      "stepId": "qa-validation",
+      "memory": {
+        "rss": 92737536,
+        "heapTotal": 37552128,
+        "heapUsed": 20452232,
+        "external": 2647483,
+        "arrayBuffers": 51431
+      },
+      "cpu": {
+        "user": 657694,
+        "system": 201913
+      },
+      "gc": {
+        "count": 0,
+        "totalDurationMs": 0,
+        "kinds": {}
+      }
+    },
+    {
+      "ts": "2025-12-22T23:09:57.795Z",
+      "phase": "persist",
+      "stepId": "sprint-plan",
+      "memory": {
+        "rss": 123637760,
+        "heapTotal": 38502400,
+        "heapUsed": 23836056,
+        "external": 4017753,
+        "arrayBuffers": 187364
+      },
+      "cpu": {
+        "user": 736401,
+        "system": 177011
+      },
+      "gc": {
+        "count": 0,
+        "totalDurationMs": 0,
+        "kinds": {}
+      }
+    },
+    {
+      "ts": "2025-12-22T23:09:58.971Z",
+      "phase": "persist",
+      "stepId": "story-refine",
+      "memory": {
+        "rss": 123887616,
+        "heapTotal": 39026688,
+        "heapUsed": 24733024,
+        "external": 4079764,
+        "arrayBuffers": 249335
+      },
+      "cpu": {
+        "user": 750504,
+        "system": 179312
+      },
+      "gc": {
+        "count": 0,
+        "totalDurationMs": 0,
+        "kinds": {}
+      }
+    },
+    {
+      "ts": "2025-12-22T23:10:00.150Z",
+      "phase": "persist",
+      "stepId": "implementation",
+      "memory": {
+        "rss": 124305408,
+        "heapTotal": 39288832,
+        "heapUsed": 25834864,
+        "external": 4151562,
+        "arrayBuffers": 321133
+      },
+      "cpu": {
+        "user": 767301,
+        "system": 181670
+      },
+      "gc": {
+        "count": 0,
+        "totalDurationMs": 0,
+        "kinds": {}
+      }
+    },
+    {
+      "ts": "2025-12-22T23:10:01.327Z",
+      "phase": "persist",
+      "stepId": "qa-validation",
+      "memory": {
+        "rss": 124674048,
+        "heapTotal": 39550976,
+        "heapUsed": 26765464,
+        "external": 4222928,
+        "arrayBuffers": 392499
+      },
+      "cpu": {
+        "user": 784699,
+        "system": 184042
+      },
+      "gc": {
+        "count": 0,
+        "totalDurationMs": 0,
+        "kinds": {}
+      }
+    },
+    {
+      "ts": "2025-12-22T23:10:01.327Z",
+      "phase": "persist",
+      "stepId": "qa-validation",
+      "memory": {
+        "rss": 124674048,
+        "heapTotal": 39550976,
+        "heapUsed": 26787088,
+        "external": 4222928,
+        "arrayBuffers": 392499
+      },
+      "cpu": {
+        "user": 784876,
+        "system": 184432
+      },
+      "gc": {
+        "count": 0,
+        "totalDurationMs": 0,
+        "kinds": {}
+      }
+    }
+  ]
+}

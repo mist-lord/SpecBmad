@@ -1,0 +1,92 @@
+{
+  "72cbea4a4a6e484c317f08ad0a7fcae07060b732ff0a3a80b2f6bd551fa3202d": {
+    "key": "72cbea4a4a6e484c317f08ad0a7fcae07060b732ff0a3a80b2f6bd551fa3202d",
+    "value": "Mocked response for agent instruction.\n- 创建任务列表并排期\n- 同步风险与阻塞项\n- 安排代码评审与集成",
+    "createdAt": 1762673041354
+  },
+  "b6de6a24cf82c7131342ab24c4ac6f1ceb9103822eeb9ea4a94c010100be7cf5": {
+    "key": "b6de6a24cf82c7131342ab24c4ac6f1ceb9103822eeb9ea4a94c010100be7cf5",
+    "value": "{\n  \"goals\": [\n    \"确保本迭代完成核心用户故事的拆解与估算\",\n    \"提升研发效率并明确依赖关系\"\n  ],\n  \"actions\": [\n    \"创建任务列表并排期\",\n    \"同步风险与阻塞项\",\n    \"安排代码评审与集成\"\n  ],\n  \"stories\": [\n    {\n      \"id\": \"S-101\",\n      \"title\": \"登录页面优化\",\n      \"priority\": \"P1\",\n      \"estimate\": \"3d\"\n    },\n    {\n      \"id\": \"S-102\",\n      \"title\": \"注册流程完善\",\n      \"priority\": \"P2\",\n      \"estimate\": \"2d\"\n    }\n  ],\n  \"nextSteps\": [\n    \"在看板新增任务并指派\",\n    \"将依赖映射到相关团队\"\n  ]\n}",
+    "createdAt": 1762673561429
+  },
+  "d94b5ce877e6c5b17b4481c1edbdd6a8c244011e956feced724dc0c2b7cbb1a3": {
+    "key": "d94b5ce877e6c5b17b4481c1edbdd6a8c244011e956feced724dc0c2b7cbb1a3",
+    "value": "{\n  \"goals\": [\n    \"确保本迭代完成核心用户故事的拆解与估算\",\n    \"提升研发效率并明确依赖关系\"\n  ],\n  \"actions\": [\n    \"创建任务列表并排期\",\n    \"同步风险与阻塞项\",\n    \"安排代码评审与集成\"\n  ],\n  \"stories\": [\n    {\n      \"id\": \"S-101\",\n      \"title\": \"登录页面优化\",\n      \"priority\": \"P1\",\n      \"estimate\": \"3d\"\n    },\n    {\n      \"id\": \"S-102\",\n      \"title\": \"注册流程完善\",\n      \"priority\": \"P2\",\n      \"estimate\": \"2d\"\n    }\n  ],\n  \"nextSteps\": [\n    \"在看板新增任务并指派\",\n    \"将依赖映射到相关团队\"\n  ]\n}",
+    "createdAt": 1762673561432
+  },
+  "36bb5b2924c50d57063e17ff3dd5baf59a228b52baf7b426043865a196b4489b": {
+    "key": "36bb5b2924c50d57063e17ff3dd5baf59a228b52baf7b426043865a196b4489b",
+    "value": "Mocked response for agent instruction.\n- 创建任务列表并排期\n- 同步风险与阻塞项\n- 安排代码评审与集成",
+    "createdAt": 1762673561433
+  },
+  "d6b5da197468944130c0949191cf9e4b0a2a1c8993b398cd4d60ed2b370e0bfe": {
+    "key": "d6b5da197468944130c0949191cf9e4b0a2a1c8993b398cd4d60ed2b370e0bfe",
+    "value": "Mocked response for agent instruction.\n- 创建任务列表并排期\n- 同步风险与阻塞项\n- 安排代码评审与集成",
+    "createdAt": 1762673561435
+  },
+  "2f8ba91b3607f7a04d20a758cedbaaeaaed4730a4665f82057addf662df38cad": {
+    "key": "2f8ba91b3607f7a04d20a758cedbaaeaaed4730a4665f82057addf662df38cad",
+    "value": "# Sprint Planning Summary\n\n## Sprint Goals\n- 完成本迭代核心故事的拆解与估算\n- 明确依赖与风险缓解方案\n\n## Stories\n- S-101 登录页面优化 (P1, 3d)\n- S-102 注册流程完善 (P2, 2d)\n\n## Next Actions\n- 创建任务并排期\n- 协调跨团队依赖",
+    "createdAt": 1762676470063
+  },
+  "4d9cf6f43a0bf7325c2035ae4685bbf629e321da8ab3d2b432620a8fafc14ddf": {
+    "key": "4d9cf6f43a0bf7325c2035ae4685bbf629e321da8ab3d2b432620a8fafc14ddf",
+    "value": "Mocked response for agent instruction.\n- 创建任务列表并排期\n- 同步风险与阻塞项\n- 安排代码评审与集成",
+    "createdAt": 1762676470286
+  },
+  "c0bafbc91d96bda5a96ca3dfb2b9eaa24d1ba53085d3c6e90d5b540d0d3db309": {
+    "key": "c0bafbc91d96bda5a96ca3dfb2b9eaa24d1ba53085d3c6e90d5b540d0d3db309",
+    "value": "mocked-response",
+    "createdAt": 1762686163077
+  },
+  "a589172b86980440945a63890bb76227b7bea0a26942738b24d38d4bda9afe6b": {
+    "key": "a589172b86980440945a63890bb76227b7bea0a26942738b24d38d4bda9afe6b",
+    "value": "mocked-response",
+    "createdAt": 1762686163079
+  },
+  "cc88299b3b91dc220b7413c9145b080e1ebbcd4da4ec3d5087306501e1f65a0e": {
+    "key": "cc88299b3b91dc220b7413c9145b080e1ebbcd4da4ec3d5087306501e1f65a0e",
+    "value": "{\"goals\":[\"加速交付\"],\"actions\":[\"准备待办列表\"],\"stories\":[{\"id\":\"S-1\",\"title\":\"用户登录\",\"priority\":\"High\",\"estimate\":\"5\"}]}",
+    "createdAt": 1762686163322
+  },
+  "24fbce015b0435b01877f1d46716416e93ebf50edfc3674790f0fe4c186209cd": {
+    "key": "24fbce015b0435b01877f1d46716416e93ebf50edfc3674790f0fe4c186209cd",
+    "value": "{\"goals\":[\"加速交付\"],\"actions\":[\"准备待办列表\"],\"stories\":[{\"id\":\"S-1\",\"title\":\"用户登录\",\"priority\":\"High\",\"estimate\":\"5\"}]}",
+    "createdAt": 1762686163323
+  },
+  "e24a81c93117f7b3c00aa60bdc8a3624b5306064f22ec733a89501a3ad91f2f6": {
+    "key": "e24a81c93117f7b3c00aa60bdc8a3624b5306064f22ec733a89501a3ad91f2f6",
+    "value": "{\"goals\":[\"加速交付\"],\"actions\":[\"准备待办列表\"],\"stories\":[{\"id\":\"S-1\",\"title\":\"用户登录\",\"priority\":\"High\",\"estimate\":\"5\"}]}",
+    "createdAt": 1762686163324
+  },
+  "0d729985758aa4ec81df623f2ff562dc51a51feda6278f2a244dd9ffa1d159f5": {
+    "key": "0d729985758aa4ec81df623f2ff562dc51a51feda6278f2a244dd9ffa1d159f5",
+    "value": "{\"goals\":[\"加速交付\"],\"actions\":[\"准备待办列表\"],\"stories\":[{\"id\":\"S-1\",\"title\":\"用户登录\",\"priority\":\"High\",\"estimate\":\"5\"}]}",
+    "createdAt": 1762686163326
+  },
+  "8acb6703d4a7530119bff5865e2ee3d38633ab113f8d33c15dba67d90db4a64f": {
+    "key": "8acb6703d4a7530119bff5865e2ee3d38633ab113f8d33c15dba67d90db4a64f",
+    "value": "{\"goals\":[\"提升迭代速度\",\"清理技术债\"],\"actions\":[\"准备待办列表\",\"明确优先级\"],\"stories\":[{\"id\":\"S-1\",\"title\":\"实现用户登录\",\"priority\":\"High\",\"estimate\":\"5\"},{\"id\":\"S-2\",\"title\":\"优化首页加载速度\",\"priority\":\"Medium\",\"estimate\":\"3\"}]}",
+    "createdAt": 1762686163486
+  },
+  "38af1fad471d9279669aa5d17c859569ba14a86eb0eb895cffe833482806a9c6": {
+    "key": "38af1fad471d9279669aa5d17c859569ba14a86eb0eb895cffe833482806a9c6",
+    "value": "{\"goals\":[\"提升迭代速度\",\"清理技术债\"],\"actions\":[\"准备待办列表\",\"明确优先级\"],\"stories\":[{\"id\":\"S-1\",\"title\":\"实现用户登录\",\"priority\":\"High\",\"estimate\":\"5\"},{\"id\":\"S-2\",\"title\":\"优化首页加载速度\",\"priority\":\"Medium\",\"estimate\":\"3\"}]}",
+    "createdAt": 1762686163488
+  },
+  "ae8a6eba3c70909c3c10538928b2da78fcfe1f92ea550b20f4e8a69cb63e8707": {
+    "key": "ae8a6eba3c70909c3c10538928b2da78fcfe1f92ea550b20f4e8a69cb63e8707",
+    "value": "# Sprint Planning Summary\n\n## Sprint Goals\n- 完成本迭代核心故事的拆解与估算\n- 明确依赖与风险缓解方案\n\n## Stories\n- S-101 登录页面优化 (P1, 3d)\n- S-102 注册流程完善 (P2, 2d)\n\n## Next Actions\n- 创建任务并排期\n- 协调跨团队依赖",
+    "createdAt": 1762686164542
+  },
+  "33e7bf117757a07b496e5267e0f685503c700941a0af150f448c44665fe0cb6b": {
+    "key": "33e7bf117757a07b496e5267e0f685503c700941a0af150f448c44665fe0cb6b",
+    "value": "# Sprint Planning Summary\n\n## Sprint Goals\n- 完成本迭代核心故事的拆解与估算\n- 明确依赖与风险缓解方案\n\n## Stories\n- S-101 登录页面优化 (P1, 3d)\n- S-102 注册流程完善 (P2, 2d)\n\n## Next Actions\n- 创建任务并排期\n- 协调跨团队依赖",
+    "createdAt": 1762686165138
+  },
+  "78156f3f30acdce0f54be1870895f5f958bc9a520448fae04102cdd0a67d2b3a": {
+    "key": "78156f3f30acdce0f54be1870895f5f958bc9a520448fae04102cdd0a67d2b3a",
+    "value": "# Sprint Planning Summary\n\n## Sprint Goals\n- 完成本迭代核心故事的拆解与估算\n- 明确依赖与风险缓解方案\n\n## Stories\n- S-101 登录页面优化 (P1, 3d)\n- S-102 注册流程完善 (P2, 2d)\n\n## Next Actions\n- 创建任务并排期\n- 协调跨团队依赖",
+    "createdAt": 1762686166042
+  }
+}
