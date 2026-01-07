@@ -1,0 +1,7 @@
+graph TD
+    T1[Task A] --> T2[Task B]
+    T1 --> T3[Task C]
+    T2 --> T4[Task D]
+    T3 --> T4
+    T4 -->|Check Dependencies| ORC[Orchestrator]
+    ORC -->|Topo Sort| Execute[Execution Order]

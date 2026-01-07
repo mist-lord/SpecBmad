@@ -5,6 +5,11 @@ import { validateSpecifyArgs } from '@/utils/args-validator';
 import { PerfTracer } from '@/utils/perf';
 import { handleError } from '@/utils/error';
 import { llmManager } from '@/core/llm';
+import { specKit } from '@/core/spec/spec-kit';
+import { PhaseController } from '@/core/phase/controller';
+import { EventStore } from '@/core/events/store';
+import { registerDefaultGates } from '@/core/phase/gates';
+import { getSpecPath } from '@/utils/paths';
 
 interface SpecifyOptions {
   input?: string;
@@ -60,21 +65,63 @@ export async function specifyCommand(options: SpecifyOptions): Promise<void> {
     }
     for (const w of v.warnings) log.warn(w);
     
-    // 非交互逻辑：使用 LLM 生成规格内容
-    const defaultDir = path.join(process.cwd(), '.specbmad', 'specifications');
-    const outPath = options.output ? (path.isAbsolute(options.output) ? options.output : path.join(process.cwd(), options.output)) : path.join(defaultDir, 'requirements.md');
-    fs.mkdirSync(path.dirname(outPath), { recursive: true });
-    await llmManager.initialize();
-    const client = llmManager.getDefaultClient();
-    let md = `# 需求规格\n\n输入文件: ${options.input || '无'}\n`;
-    if (client) {
-      const prompt = `Create a clear requirement specification in Markdown. Include Title, Summary, Scope, Non-functional Requirements, Risks, Acceptance Criteria, and Milestones. Use concise Chinese headings.`;
-      const text = await client.generateText(prompt, { temperature: 0.2, maxTokens: 1200 });
-      md = text || md;
-    }
+    // V2 架构：使用 Spec-Kit (Phase 0)
+    // 注册默认 Gate 检查器
+    registerDefaultGates();
+
+    const input = options.input || '请提供需求描述';
+    const outputPath = options.output 
+      ? (path.isAbsolute(options.output) ? options.output : path.join(process.cwd(), options.output))
+      : getSpecPath('intent.yaml');
+
     if (!options.dryRun) {
-      fs.writeFileSync(outPath, md, 'utf-8');
-      log.success(`需求规格文档生成完成，输出: ${outPath}`);
+      // 调用 Spec-Kit
+      const specKitResult = await specKit.execute({
+        input,
+        outputPath
+      });
+
+      if (!specKitResult.success) {
+        throw new Error(`Spec-Kit 执行失败: ${specKitResult.error}`);
+      }
+
+      log.success(`Intent Spec 已生成: ${specKitResult.outputPath}`);
+
+      // 触发 Phase 0→1 迁移（如果当前在 Phase 0）
+      try {
+        const controller = new PhaseController();
+        const eventStore = new EventStore();
+        const currentPhase = controller.getCurrentPhase();
+
+        if (currentPhase === 0) {
+          log.info('触发 Phase 0→1 迁移...');
+          const transitionResult = await controller.transitionTo(1, {
+            projectRoot: process.cwd(),
+            currentPhase: 0,
+            metadata: { triggeredBy: 'specify-command' }
+          });
+
+          // 记录事件
+          eventStore.appendEvent({
+            type: 'phase_transition',
+            phase: 1,
+            status: transitionResult.success ? 'passed' : 'failed',
+            timestamp: transitionResult.timestamp,
+            actor: 'specify-command',
+            inputs: { fromPhase: 0, toPhase: 1 },
+            outputs: { gateResults: transitionResult.gateResults },
+            notes: transitionResult.error
+          });
+
+          if (transitionResult.success) {
+            log.success('Phase 迁移成功: 0 → 1');
+          } else {
+            log.warn(`Phase 迁移失败: ${transitionResult.error}`);
+          }
+        }
+      } catch (error) {
+        log.warn(`Phase 迁移失败（不影响 Spec 生成）: ${error instanceof Error ? error.message : String(error)}`);
+      }
     } else {
       log.info('干跑模式，未写入文件');
     }

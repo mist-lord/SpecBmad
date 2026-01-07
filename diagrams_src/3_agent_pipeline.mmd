@@ -1,0 +1,12 @@
+sequenceDiagram
+    participant O as Orchestrator
+    participant A as BaseAgent
+    participant L as LLMManager
+    participant F as FileSystem
+    O->>A: execute(context)
+    A->>A: preparePrompt()
+    A->>L: generateResponse(prompt)
+    L-->>A: Markdown Result
+    A->>A: parseResponse()
+    A->>F: writeArtifacts()
+    A-->>O: AgentResult

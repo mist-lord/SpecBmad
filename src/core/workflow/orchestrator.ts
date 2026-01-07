@@ -6,7 +6,14 @@ import { registerBuiltInAgents } from '@/agents';
 import { config } from '@/utils/config';
 import { PATHS, getProjectPath } from '@/utils/paths';
 import fs from 'fs';
-import { PerformanceObserver } from 'perf_hooks'
+import { PerformanceObserver } from 'perf_hooks';
+import { PhaseController } from '@/core/phase/controller';
+import { EventStore } from '@/core/events/store';
+import { PhaseContext, PhaseNumber } from '@/core/phase/types';
+import { registerDefaultGates } from '@/core/phase/gates';
+import { specKit } from '@/core/spec/spec-kit';
+import { openSpec } from '@/core/spec/openspec';
+import { deepCode } from '@/core/verification/deepcode';
 
 export interface WorkflowStepConfig {
   id: string;
@@ -125,6 +132,198 @@ export class Orchestrator {
     const last = Array.from(completedSet).slice(-1)[0] || '';
     this.persistWorkflowState(workflowName, last, Array.from(completedSet), 'completed', undefined, this.sampleResources('persist', last || 'final'));
 
+    return results;
+  }
+
+  /**
+   * V2 架构：Phase 驱动的工作流执行
+   * 
+   * 执行 Phase 0→5 完整流程
+   * 所有 Phase 迁移决策由 Phase Controller 执行
+   */
+  async executePhaseWorkflow(initialContext: AgentContext, startPhase: PhaseNumber = 0, endPhase: PhaseNumber = 5): Promise<AgentResult[]> {
+    // 注册默认 Gate 检查器
+    registerDefaultGates();
+
+    const controller = new PhaseController();
+    const eventStore = new EventStore();
+    const results: AgentResult[] = [];
+
+    log.info(`开始 Phase 驱动工作流: Phase ${startPhase} → ${endPhase}`);
+
+    // 确保 LLM manager 就绪
+    await llmManager.initialize();
+    const client = llmManager.getDefaultClient();
+    if (!client) {
+      throw new Error('未找到可用的默认 LLM 客户端');
+    }
+
+    // 注册所有内置代理
+    registerBuiltInAgents();
+
+    let currentPhase = controller.getCurrentPhase();
+    if (currentPhase < startPhase) {
+      log.warn(`当前 Phase ${currentPhase} 小于起始 Phase ${startPhase}，重置为 ${startPhase}`);
+      // 注意：这里不能直接设置 Phase，需要通过迁移
+      // 如果当前 Phase 小于起始 Phase，可能需要先执行前面的 Phase
+    }
+
+    // 执行 Phase 0→5 流程
+    for (let phase = Math.max(currentPhase, startPhase); phase <= endPhase; phase++) {
+      log.info(`执行 Phase ${phase}`);
+
+      const phaseContext: PhaseContext = {
+        projectRoot: process.cwd(),
+        currentPhase: phase as PhaseNumber,
+        metadata: {
+          workflow: 'phase-driven',
+          startPhase,
+          endPhase
+        }
+      };
+
+      // 执行当前 Phase 的任务
+      let phaseResult: AgentResult | null = null;
+
+      try {
+        switch (phase) {
+          case 0:
+            // Phase 0: Intent Capture (Spec-Kit)
+            if (initialContext.inputData?.requirement) {
+              const specKitResult = await specKit.execute({
+                input: initialContext.inputData.requirement as string
+              });
+              if (!specKitResult.success) {
+                throw new Error(`Spec-Kit 执行失败: ${specKitResult.error}`);
+              }
+              phaseResult = {
+                success: true,
+                output: `Intent Spec 已生成: ${specKitResult.outputPath}`,
+                artifacts: [],
+                nextSteps: [],
+                metadata: { phase: 0, specKitResult }
+              };
+            }
+            break;
+
+          case 1:
+            // Phase 1: Formal Specification (OpenSpec)
+            const openSpecResult = await openSpec.execute();
+            if (!openSpecResult.success) {
+              throw new Error(`OpenSpec 执行失败: ${openSpecResult.error}`);
+            }
+            phaseResult = {
+              success: true,
+              output: `Formal Spec 已生成: ${openSpecResult.outputPath}`,
+              artifacts: [],
+              nextSteps: [],
+              metadata: { phase: 1, openSpecResult }
+            };
+            break;
+
+          case 2:
+            // Phase 2: Architecture & Planning (BMAD PM/Architect)
+            const architect = AgentFactory.create('Architect', client);
+            const architectContext: AgentContext = {
+              ...initialContext,
+              inputData: {
+                ...initialContext.inputData,
+                type: 'technical'
+              }
+            };
+            phaseResult = await architect.execute(architectContext);
+            break;
+
+          case 3:
+            // Phase 3: Implementation (BMAD-DEV + DeepCode)
+            const developer = AgentFactory.create('Developer', client);
+            const devContext: AgentContext = {
+              ...initialContext,
+              inputData: {
+                ...initialContext.inputData,
+                task: 'core-feature'
+              }
+            };
+            phaseResult = await developer.execute(devContext);
+
+            // DeepCode 验证
+            const deepCodeResult = await deepCode.execute();
+            if (!deepCodeResult.success) {
+              throw new Error(`DeepCode 验证失败: ${deepCodeResult.error}`);
+            }
+            break;
+
+          case 4:
+            // Phase 4: Verification (OpenSpec + DeepCode)
+            const qa = AgentFactory.create('QA', client);
+            const qaContext: AgentContext = {
+              ...initialContext,
+              inputData: {
+                ...initialContext.inputData,
+                type: 'unit'
+              }
+            };
+            phaseResult = await qa.execute(qaContext);
+            break;
+
+          case 5:
+            // Phase 5: Iteration / Evolution
+            log.info('Phase 5: Iteration / Evolution - 工作流完成');
+            phaseResult = {
+              success: true,
+              output: '工作流完成',
+              artifacts: [],
+              nextSteps: [],
+              metadata: { phase: 5 }
+            };
+            break;
+        }
+
+        if (phaseResult) {
+          results.push(phaseResult);
+        }
+
+        // 尝试迁移到下一个 Phase
+        if (phase < endPhase) {
+          const nextPhase = (phase + 1) as PhaseNumber;
+          const transitionResult = await controller.transitionTo(nextPhase, phaseContext);
+
+          // 记录事件
+          eventStore.appendEvent({
+            type: 'phase_transition',
+            phase: nextPhase,
+            status: transitionResult.success ? 'passed' : 'failed',
+            timestamp: transitionResult.timestamp,
+            actor: 'orchestrator',
+            inputs: { fromPhase: phase, toPhase: nextPhase },
+            outputs: { gateResults: transitionResult.gateResults },
+            notes: transitionResult.error
+          });
+
+          if (!transitionResult.success) {
+            throw new Error(`Phase 迁移失败: ${transitionResult.error}`);
+          }
+
+          log.success(`Phase 迁移成功: ${phase} → ${nextPhase}`);
+        }
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        log.error(`Phase ${phase} 执行失败: ${msg}`);
+
+        // 记录错误事件
+        eventStore.appendEvent({
+          type: 'error',
+          phase,
+          timestamp: new Date().toISOString(),
+          error: msg,
+          context: { phase, startPhase, endPhase }
+        });
+
+        throw error;
+      }
+    }
+
+    log.success(`Phase 驱动工作流完成: Phase ${startPhase} → ${endPhase}`);
     return results;
   }
 

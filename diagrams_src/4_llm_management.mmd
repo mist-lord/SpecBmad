@@ -1,0 +1,7 @@
+graph LR
+    M[LLMManager] --> C1[OpenAI Client]
+    M --> C2[Anthropic Client]
+    M --> C3[DeepSeek Client]
+    M -->|Fallback| Mock[MockLLMClient]
+    C1 -->|Timeout/Error| M
+    M -->|Switch| C3

@@ -1,0 +1,13 @@
+graph TD
+    U[用户] --> C[CLI入口: dist/index.js]
+    C -->|解析命令| CMD[具体命令: analyze/plan/implement/qa/workflow]
+    CMD -->|加载配置| CFG[项目配置: .specbmad/config.json]
+    CMD -->|初始化| LM[LLMManager]
+    LM -->|注册默认/Mock客户端| LLM[(LLM Client)]
+    CMD -->|编排执行| ORC[Orchestrator]
+    ORC -->|注册内置代理| AF[AgentFactory]
+    AF -->|实例化| AG[具体Agent: ScrumMaster/Developer/QA]
+    AG -->|生成响应| LLM
+    AG -->|写产物/更新内存| ART[产物/摘要]
+    ORC -->|持久化| STATE[.bmad/workflow.state.json]
+    CMD -->|输出| OUT["控制台/文件(.bmad/*.md|*.json)"]

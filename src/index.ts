@@ -37,6 +37,7 @@ import { changeCommand } from '@/commands/change';
 import { exportCommand } from '@/commands/export';
 import { uiCommand } from '@/commands/ui';
 import { doctorCommand } from '@/commands/doctor';
+import { registerPhaseCommand } from '@/commands/phase';
 import { registerBuiltInStacks } from '@/core/stack';
 
 // 加载环境变量
@@ -119,6 +120,9 @@ program.addCommand(uiCommand);
 
 // 系统诊断
 program.addCommand(doctorCommand);
+
+// Phase 管理命令
+registerPhaseCommand(program);
 
 // BMAD-Method 工作流命令
 program.addCommand(analyzeCommand);
@@ -239,6 +243,9 @@ program
   .option('--resume', '从上次失败处恢复执行')
   .option('--resume-file <file>', '指定状态文件，默认 .bmad/workflow.state.json')
   .option('--auto-run', '工作流完成后自动运行生成程序')
+  .option('--phase', '使用 Phase 驱动的工作流 (V2 架构)')
+  .option('--start-phase <phase>', '起始 Phase (0-5)', (val) => parseInt(val, 10))
+  .option('--end-phase <phase>', '结束 Phase (0-5)', (val) => parseInt(val, 10))
   .action(workflowCommand);
 
 // 如果没有提供命令，显示帮助信息

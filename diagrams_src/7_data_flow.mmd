@@ -1,0 +1,4 @@
+graph LR
+    E[EventStore] -->|Append| Log[.bmad/events.json]
+    S[PhaseController] -->|Save| State[.bmad/phase.state.json]
+    A[ArtifactManager] -->|Write| Output[src/...]

@@ -1,0 +1,6 @@
+graph TD
+    Code[Generated Code] --> D[DeepCode Gate]
+    D -->|Check AST/Security| O[OpenSpec Gate]
+    O -->|Check Spec Compliance| Result{Passed?}
+    Result -->|Yes| Next[Next Phase]
+    Result -->|No| Fix[Self-Correction Agent]

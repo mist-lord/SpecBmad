@@ -1,0 +1,5 @@
+graph TD
+    Browser[Dashboard UI] -->|REST API| Express[Express Server]
+    Express -->|Routes| Changes[changes.ts]
+    Express -->|Routes| Workflow[workflow.ts]
+    Changes -->|Read/Write| Storage[Local JSON Storage]

@@ -32,9 +32,24 @@ export const PATHS = {
   ARTIFACTS_DIR: '.specbmad/artifacts',
   
   /**
-   * 规范文档目录
+   * 规范文档目录（旧路径，向后兼容）
    */
   SPECIFICATIONS_DIR: '.specbmad/specifications',
+  
+  /**
+   * V2 架构目录结构
+   */
+  SPEC_DIR: 'spec',
+  PLAN_DIR: 'plan',
+  CODE_DIR: 'code',
+  VERIFICATION_DIR: 'verification',
+  EVENTS_DIR: 'events',
+  
+  /**
+   * Phase 相关文件
+   */
+  PHASE_STATE_FILE: '.specbmad/phase.state.json',
+  PHASE_TRANSITIONS_CONFIG: 'spec/phase_transitions.yaml',
   
   /**
    * 缓存目录
@@ -93,6 +108,29 @@ export function getArtifactsPath(relativePath: string): string {
  */
 export function getRunPath(runId: string, subPath: string = ''): string {
   return path.join(process.cwd(), PATHS.RUNS_DIR, runId, subPath);
+}
+
+/**
+ * 获取 V2 架构目录路径
+ */
+export function getSpecPath(subPath: string = ''): string {
+  return path.join(process.cwd(), PATHS.SPEC_DIR, subPath);
+}
+
+export function getPlanPath(subPath: string = ''): string {
+  return path.join(process.cwd(), PATHS.PLAN_DIR, subPath);
+}
+
+export function getCodePath(subPath: string = ''): string {
+  return path.join(process.cwd(), PATHS.CODE_DIR, subPath);
+}
+
+export function getVerificationPath(subPath: string = ''): string {
+  return path.join(process.cwd(), PATHS.VERIFICATION_DIR, subPath);
+}
+
+export function getEventsPath(subPath: string = ''): string {
+  return path.join(process.cwd(), PATHS.EVENTS_DIR, subPath);
 }
 
 /**

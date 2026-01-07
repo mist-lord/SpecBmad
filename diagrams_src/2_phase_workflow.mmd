@@ -1,0 +1,9 @@
+stateDiagram-v2
+    [*] --> Phase0: Intent Capture
+    Phase0 --> Phase1: Spec Generation
+    Phase1 --> Phase2: Implementation Plan
+    Phase2 --> Phase3: Code Generation
+    Phase3 --> Phase4: Verification
+    Phase4 --> Phase5: Completion
+    Phase4 --> Phase3: Gate Failed (Retry)
+    Phase5 --> [*]

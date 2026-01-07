@@ -28,8 +28,14 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   testTimeout: 10000,
   transformIgnorePatterns: [
-    'node_modules/(?!(chalk)/)'
+    'node_modules/(?!(chalk|execa)/)'
   ],
+  extensionsToTreatAsEsm: ['.ts'],
+  globals: {
+    'ts-jest': {
+      useESM: true
+    }
+  },
   // 避免跨测试套件的状态文件写入竞态
   maxWorkers: 1
 };

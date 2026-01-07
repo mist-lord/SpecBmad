@@ -30,10 +30,58 @@ interface WorkflowOptions {
   resume?: boolean;
   resumeFile?: string;
   autoRun?: boolean;
+  phase?: boolean; // V2 架构：使用 Phase 驱动的工作流
+  startPhase?: number; // 起始 Phase (0-5)
+  endPhase?: number; // 结束 Phase (0-5)
 }
 
 export async function workflowCommand(options: WorkflowOptions): Promise<void> {
   try {
+    // V2 架构：Phase 驱动的工作流
+    if (options.phase) {
+      const { ensureProjectInitialized } = await import('@/utils/auto-init');
+      await ensureProjectInitialized(true);
+      config.load();
+
+      const orchestrator = new Orchestrator();
+      const startPhase = (options.startPhase ?? 0) as 0 | 1 | 2 | 3 | 4 | 5;
+      const endPhase = (options.endPhase ?? 5) as 0 | 1 | 2 | 3 | 4 | 5;
+
+      const initialContext: AgentContext = {
+        workingDirectory: process.cwd(),
+        projectState: {
+          projectName: config.getAll().projectName || 'default',
+          workflow: {
+            currentStep: '',
+            completedSteps: []
+          }
+        },
+        inputData: {
+          requirement: options.name || '请提供需求描述'
+        }
+      };
+
+      const results = await orchestrator.executePhaseWorkflow(initialContext, startPhase, endPhase);
+
+      // 输出结果
+      if (options.output) {
+        const outputPath = path.isAbsolute(options.output) 
+          ? options.output 
+          : path.join(process.cwd(), options.output);
+        const format = options.format || 'json';
+        
+        if (format === 'json') {
+          fs.writeFileSync(outputPath, JSON.stringify(results, null, 2), 'utf-8');
+        } else if (format === 'markdown') {
+          const markdown = renderWorkflowMarkdownSummary('phase-workflow', results);
+          fs.writeFileSync(outputPath, markdown, 'utf-8');
+        }
+        log.success(`工作流结果已保存: ${outputPath}`);
+      }
+
+      return;
+    }
+
     // 自动初始化（如果需要）
     const { ensureProjectInitialized } = await import('@/utils/auto-init');
     await ensureProjectInitialized(true); // 静默模式
