@@ -1,10 +1,10 @@
 import fs from 'fs';
 import path from 'path';
-import { workflowCommand } from '../src/commands/workflow';
-import { PATHS, getProjectPath } from '../src/utils/paths';
+import { workflowCommand } from '@/commands/workflow';
+import { PATHS, getProjectPath } from '@/utils/paths';
 
 // Mock LLM manager to avoid real API calls and return deterministic outputs
-jest.mock('../src/core/llm/manager', () => {
+jest.mock('@/core/llm/manager', () => {
   const fakeClient = {
     name: 'test-llm',
     type: 'custom',

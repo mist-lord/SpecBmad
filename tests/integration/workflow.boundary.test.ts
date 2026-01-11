@@ -1,9 +1,9 @@
 import fs from 'fs';
 import path from 'path';
-import { PATHS, getProjectPath } from '../src/utils/paths';
+import { PATHS, getProjectPath } from '@/utils/paths';
 
 // Mock LLM manager to avoid ConfigManager constructor dependency
-jest.mock('../src/core/llm/manager', () => ({
+jest.mock('@/core/llm/manager', () => ({
   llmManager: {
     initialize: jest.fn().mockResolvedValue(undefined),
     getDefaultClient: jest.fn().mockReturnValue({
@@ -13,10 +13,10 @@ jest.mock('../src/core/llm/manager', () => ({
   }
 }));
 
-import { workflowCommand } from '../src/commands/workflow';
+import { workflowCommand } from '@/commands/workflow';
 
 // Use config mock from tests/setup
-import { config as mockConfig } from '../src/utils/config';
+import { config as mockConfig } from '@/utils/config';
 
 // Ensure cleanup
 afterAll(() => {
@@ -69,18 +69,18 @@ describe('workflow command boundary cases', () => {
   test('throws when no default LLM client', async () => {
     jest.resetModules();
     // Mock llmManager to return null
-    jest.doMock('../src/core/llm/manager', () => ({
+    jest.doMock('@/core/llm/manager', () => ({
       llmManager: {
         initialize: jest.fn().mockResolvedValue(undefined),
         getDefaultClient: jest.fn().mockReturnValue(null)
       }
     }));
 
-    const { workflowCommand: wf } = await import('../src/commands/workflow');
+    const { workflowCommand: wf } = await import('@/commands/workflow');
     await expect(wf({ name: 'planning-only', format: 'json', reportDir: PATHS.ARTIFACTS_DIR } as any))
       .rejects.toThrow(/未找到可用的默认 LLM 客户端/);
 
     // Restore module mocks
-    jest.dontMock('../src/core/llm/manager');
+    jest.dontMock('@/core/llm/manager');
   });
 });

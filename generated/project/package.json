@@ -1,0 +1,11 @@
+{
+  "name": "project",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "echo \"build\"",
+    "start": "node src/index.js",
+    "test": "echo \"test\""
+  }
+}

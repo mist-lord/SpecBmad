@@ -28,8 +28,7 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   testTimeout: 10000,
   transformIgnorePatterns: [
-    'node_modules/(?!(chalk|execa))/',
-    'src/core/bridge/python.ts'
+    'node_modules/(?!(chalk|execa))/'
   ],
   globals: {
     'ts-jest': {

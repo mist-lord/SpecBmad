@@ -1,13 +1,13 @@
 import fs from 'fs';
 import path from 'path';
-import { BaseAgent } from '../src/agents/base/agent';
-import { AgentFactory } from '../src/agents/factory';
-import { AgentContext, AgentResult, LLMClient } from '../src/types';
-import { workflowCommand } from '../src/commands/workflow';
-import { PATHS, getProjectPath } from '../src/utils/paths';
+import { BaseAgent } from '@/agents/base/agent';
+import { AgentFactory } from '@/agents/factory';
+import { AgentContext, AgentResult, LLMClient } from '@/types';
+import { workflowCommand } from '@/commands/workflow';
+import { PATHS, getProjectPath } from '@/utils/paths';
 
 // Mock LLM manager to avoid real API calls
-jest.mock('../src/core/llm/manager', () => {
+jest.mock('@/core/llm/manager', () => {
   const fakeClient = {
     name: 'test-llm',
     type: 'custom',

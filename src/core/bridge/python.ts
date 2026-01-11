@@ -6,7 +6,6 @@
  * 错误处理和超时控制
  */
 
-import { execa as execa } from 'execa';
 import { log } from '@/utils/logger';
 import path from 'path';
 import fs from 'fs';
@@ -37,6 +36,11 @@ export class PythonBridge {
     this.detectPython();
   }
 
+  private async getExeca() {
+    const { execa } = await import('execa');
+    return execa;
+  }
+
   /**
    * 检测 Python 命令
    */
@@ -45,6 +49,7 @@ export class PythonBridge {
     
     for (const cmd of commands) {
       try {
+        const execa = await this.getExeca();
         const result = await execa(cmd, ['--version'], { timeout: 5000 });
         if (result.exitCode === 0) {
           this.pythonCommand = cmd;
@@ -85,6 +90,7 @@ export class PythonBridge {
     try {
       log.debug(`执行 Python 脚本: ${scriptPath} ${args.join(' ')}`);
 
+      const execa = await this.getExeca();
       const result = await execa(
         this.pythonCommand,
         [scriptPath, ...args],
@@ -154,6 +160,7 @@ export class PythonBridge {
    */
   async isAvailable(): Promise<boolean> {
     try {
+      const execa = await this.getExeca();
       const result = await execa(this.pythonCommand, ['--version'], { timeout: 5000 });
       return result.exitCode === 0;
     } catch {
@@ -166,6 +173,7 @@ export class PythonBridge {
    */
   async getVersion(): Promise<string | null> {
     try {
+      const execa = await this.getExeca();
       const result = await execa(this.pythonCommand, ['--version'], { timeout: 5000 });
       return result.stdout.trim();
     } catch {

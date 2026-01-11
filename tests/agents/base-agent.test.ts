@@ -1,7 +1,7 @@
-import { BaseAgent } from '../../src/agents/base/agent';
-import { AgentContext, AgentResult, LLMClient, AgentType } from '../../src/types';
-import { createMockLLMClient } from '../../src/core/llm/mock';
-import { LLMClientFactory, BaseLLMClient } from '../../src/core/llm/base';
+import { BaseAgent } from '@/agents/base/agent';
+import { AgentContext, AgentResult, LLMClient, AgentType } from '@/types';
+import { createMockLLMClient } from '@/core/llm';
+import { LLMClientFactory, BaseLLMClient } from '@/core/llm/base';
 
 class TestAgent extends BaseAgent {
   constructor(llm: LLMClient) {

@@ -1,11 +1,11 @@
 import fs from 'fs';
 import path from 'path';
-import { AgentFactory } from '../src/agents/factory';
-import { BaseAgent } from '../src/agents/base/agent';
-import { Orchestrator } from '../src/core/workflow/orchestrator';
-import { config } from '../src/utils/config';
-import { PATHS, getProjectPath } from '../src/utils/paths';
-import { AgentContext, AgentResult, LLMClient } from '../src/types';
+import { AgentFactory } from '@/agents/factory';
+import { BaseAgent } from '@/agents/base/agent';
+import { Orchestrator } from '@/core/workflow/orchestrator';
+import { config } from '@/utils/config';
+import { PATHS, getProjectPath } from '@/utils/paths';
+import { AgentContext, AgentResult, LLMClient } from '@/types';
 
 // FlakyAgent: 第一次调用指定 stepId 失败；若设置 retries，会在重试时成功
 const attempts: Record<string, number> = {};

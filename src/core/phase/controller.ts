@@ -11,7 +11,7 @@ import { log } from '@/utils/logger';
 import { PhaseNumber, PhaseTransitionConfig, PhaseContext, PhaseResult, GateResult, PhaseState } from './types';
 import { gateRegistry, GateCheckContext } from './gates';
 import { getProjectPath } from '@/utils/paths';
-import { EventStore } from '../events/store';
+import { EventStore, GateEvent } from '../events/store';
  // 注意：registerDefaultGates 延迟导入，避免在测试时触发 execa 导入问题
 
  
@@ -205,23 +205,9 @@ import { EventStore } from '../events/store';
         status: gr.passed ? 'passed' : 'failed',
         timestamp,
         message: gr.message,
-        details: gr
+        details: gr as unknown as Record<string, unknown>
       } as GateEvent;
       this.eventStore.appendEvent(gateEvent);
-    }
-
-    // 记录 Gate 事件
-    for (const gr of gateResults) {
-      const ge: any = {
-        type: 'gate_check',
-        gateId: gr.gateId,
-        phase: targetPhase,
-        status: gr.passed ? 'passed' : 'failed',
-        timestamp,
-        message: gr.message,
-        details: gr
-      };
-      this.eventStore.appendEvent(ge as any);
     }
 
     // 执行迁移

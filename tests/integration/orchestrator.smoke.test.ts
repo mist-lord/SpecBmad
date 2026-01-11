@@ -1,10 +1,10 @@
-import { Orchestrator } from '../src/core/workflow/orchestrator';
-import { renderWorkflowMarkdownSummary } from '../src/utils/summary';
-import { registerScrumMasterAgent } from '../src/agents/scrum-master';
-import { AgentContext } from '../src/types';
+import { Orchestrator } from '@/core/workflow/orchestrator';
+import { renderWorkflowMarkdownSummary } from '@/utils/summary';
+import { registerScrumMasterAgent } from '@/agents/scrum-master';
+import { AgentContext } from '@/types';
 
 // Mock LLM manager to avoid real API calls and return deterministic outputs
-jest.mock('../src/core/llm/manager', () => {
+jest.mock('@/core/llm/manager', () => {
   const fakeClient = {
     name: 'test-llm',
     type: 'custom',

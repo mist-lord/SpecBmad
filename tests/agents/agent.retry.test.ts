@@ -1,7 +1,7 @@
 import { BaseAgent } from '@/agents/base/agent';
 import { AgentContext, AgentResult, AgentType, LLMClient, LLMOptions } from '@/types';
 import { LLMClientFactory } from '@/core/llm/base';
-import { createMockLLMClient } from '@/core/llm/mock';
+import { createMockLLMClient } from '@/core/llm';
 
 class FailingLLM implements LLMClient {
   name = 'Failing';

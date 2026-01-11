@@ -1,0 +1,15 @@
+{
+  "workflow": "resume-flaky",
+  "steps": [
+    {
+      "agent": "FailOnce",
+      "mode": "test",
+      "nextSteps": []
+    },
+    {
+      "agent": "FailOnce",
+      "mode": "test",
+      "nextSteps": []
+    }
+  ]
+}

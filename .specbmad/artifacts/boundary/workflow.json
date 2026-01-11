@@ -1,0 +1,17 @@
+{
+  "workflow": "planning-only",
+  "steps": [
+    {
+      "agent": "ScrumMaster",
+      "mode": "plan",
+      "prioritize": false,
+      "nextSteps": []
+    },
+    {
+      "agent": "ScrumMaster",
+      "mode": "refine",
+      "prioritize": false,
+      "nextSteps": []
+    }
+  ]
+}
