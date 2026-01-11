@@ -28,9 +28,9 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   testTimeout: 10000,
   transformIgnorePatterns: [
-    'node_modules/(?!(chalk|execa)/)'
+    'node_modules/(?!(chalk|execa))/',
+    'src/core/bridge/python.ts'
   ],
-  extensionsToTreatAsEsm: ['.ts'],
   globals: {
     'ts-jest': {
       useESM: true

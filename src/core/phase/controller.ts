@@ -11,17 +11,29 @@ import { log } from '@/utils/logger';
 import { PhaseNumber, PhaseTransitionConfig, PhaseContext, PhaseResult, GateResult, PhaseState } from './types';
 import { gateRegistry, GateCheckContext } from './gates';
 import { getProjectPath } from '@/utils/paths';
-// 注意：registerDefaultGates 延迟导入，避免在测试时触发 execa 导入问题
+import { EventStore } from '../events/store';
+ // 注意：registerDefaultGates 延迟导入，避免在测试时触发 execa 导入问题
 
-export class PhaseController {
+ 
+ export class PhaseController {
   private currentPhase: PhaseNumber = 0;
   private transitionConfig: PhaseTransitionConfig | null = null;
   private stateFile: string;
+  private eventStore!: EventStore;
+
+  private logEvent(event: any) {
+    try {
+      (this.eventStore as any).appendEvent(event);
+    } catch {
+      // swallow logging errors to not affect core flow
+    }
+  }
 
   constructor(projectRoot: string = process.cwd()) {
     this.stateFile = path.join(projectRoot, '.specbmad', 'phase.state.json');
     this.loadState();
     this.loadTransitionConfig(projectRoot);
+    this.eventStore = new EventStore(projectRoot);
   }
 
   /**
@@ -184,11 +196,42 @@ export class PhaseController {
       };
     }
 
+    // 记录 Gate 事件
+    for (const gr of gateResults) {
+      const gateEvent: GateEvent = {
+        type: 'gate_check',
+        gateId: gr.gateId,
+        phase: targetPhase,
+        status: gr.passed ? 'passed' : 'failed',
+        timestamp,
+        message: gr.message,
+        details: gr
+      } as GateEvent;
+      this.eventStore.appendEvent(gateEvent);
+    }
+
+    // 记录 Gate 事件
+    for (const gr of gateResults) {
+      const ge: any = {
+        type: 'gate_check',
+        gateId: gr.gateId,
+        phase: targetPhase,
+        status: gr.passed ? 'passed' : 'failed',
+        timestamp,
+        message: gr.message,
+        details: gr
+      };
+      this.eventStore.appendEvent(ge as any);
+    }
+
     // 执行迁移
     this.currentPhase = targetPhase;
     this.saveState();
 
     log.info(`Phase 迁移成功: ${fromPhase} → ${targetPhase}`);
+
+    // 事件记录：Phase 迁移
+    try { (this.eventStore as any).appendEvent({ type: 'phase_transition', phase: targetPhase, status: 'passed', timestamp, actor: 'PhaseController', inputs: { fromPhase, toPhase: targetPhase } } as any); } catch (e) { /* ignore logging failure in tests */ }
 
     return {
       success: true,

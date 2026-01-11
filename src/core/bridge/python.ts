@@ -6,7 +6,7 @@
  * 错误处理和超时控制
  */
 
-import { execa } from 'execa';
+import { execa as execa } from 'execa';
 import { log } from '@/utils/logger';
 import path from 'path';
 import fs from 'fs';
