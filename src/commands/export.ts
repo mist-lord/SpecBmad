@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import fs from 'fs';
 import path from 'path';
 import { log } from '@/utils/logger';
-import { PATHS, getProjectPath } from '@/utils/paths';
+import { PATHS } from '@/utils/paths';
 import chalk from 'chalk';
 
 export const exportCommand = new Command('export')
