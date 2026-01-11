@@ -1,5 +1,9 @@
 {
+<<<<<<< HEAD
   "generatedAt": "2026-01-11T08:17:14.275Z",
+=======
+  "generatedAt": "2026-01-11T08:56:53.543Z",
+>>>>>>> origin/main
   "files": [
     {
       "name": "boundary",
@@ -11,11 +15,16 @@
       "name": "llm-dashboard.md",
       "path": "/Users/baijinde/code/SpecBmad/.specbmad/artifacts/llm-dashboard.md",
       "size": 561,
+<<<<<<< HEAD
       "mtime": "2026-01-11T08:17:14.275Z"
+=======
+      "mtime": "2026-01-11T08:56:53.361Z"
+>>>>>>> origin/main
     },
     {
       "name": "naming",
       "path": "/Users/baijinde/code/SpecBmad/.specbmad/artifacts/naming",
+<<<<<<< HEAD
       "size": 160,
       "mtime": "2026-01-11T08:17:14.196Z"
     },
@@ -30,6 +39,10 @@
       "path": "/Users/baijinde/code/SpecBmad/.specbmad/artifacts/workflow-summary-test-1768119434271.json",
       "size": 352,
       "mtime": "2026-01-11T08:17:14.274Z"
+=======
+      "size": 256,
+      "mtime": "2026-01-11T08:56:53.542Z"
+>>>>>>> origin/main
     }
   ]
 }

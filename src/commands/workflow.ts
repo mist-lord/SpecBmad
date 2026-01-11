@@ -4,7 +4,11 @@ import fs from 'fs';
 import yaml from 'yaml';
 import { Orchestrator } from '@/core/workflow/orchestrator';
 import { config } from '@/utils/config';
+<<<<<<< HEAD
 import { PATHS, getProjectPath, getArtifactsPath } from '@/utils/paths';
+=======
+import { PATHS, getProjectPath } from '@/utils/paths';
+>>>>>>> origin/main
 import { AgentContext, AgentResult } from '@/types';
 import { renderWorkflowMarkdownSummary } from '../utils/summary';
 import { renderLlmUsageDashboard } from '@/utils/dashboard';
@@ -212,8 +216,13 @@ export async function workflowCommand(options: WorkflowOptions): Promise<void> {
     const artifactsDir = options.reportDir || (options.runDir ? path.join(runRoot, 'artifacts') : getProjectPath(PATHS.ARTIFACTS_DIR));
     const codeDir = options.runDir ? path.join(runRoot, 'code') : path.join(process.cwd(), 'generated', 'project');
     const docsDir = options.runDir ? path.join(runRoot, 'docs') : path.join(process.cwd(), 'docs');
+<<<<<<< HEAD
     const logsDir = options.runDir ? path.join(runRoot, 'logs') : path.join(process.cwd(), 'docs');
     const logFile = path.join(logsDir, 'run-output.txt');
+=======
+    // const logsDir = options.runDir ? path.join(runRoot, 'logs') : path.join(process.cwd(), 'docs');
+    // const logFile = path.join(logsDir, 'run-output.txt');
+>>>>>>> origin/main
 
     const context: AgentContext = {
       projectState: {

@@ -3,7 +3,11 @@ import { PerfTracer } from '@/utils/perf';
 import { handleError } from '@/utils/error';
 import { ensureProjectInitialized, autoConfigureLLM } from '@/utils/auto-init';
 import { workflowCommand } from './workflow';
+<<<<<<< HEAD
 import { PATHS, getRunPath } from '@/utils/paths';
+=======
+import { getRunPath } from '@/utils/paths';
+>>>>>>> origin/main
 import path from 'path';
 import chalk from 'chalk';
 import fs from 'fs';

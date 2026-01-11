@@ -4,7 +4,10 @@ import path from 'path';
 import { validateSpecifyArgs } from '@/utils/args-validator';
 import { PerfTracer } from '@/utils/perf';
 import { handleError } from '@/utils/error';
+<<<<<<< HEAD
 import { llmManager } from '@/core/llm';
+=======
+>>>>>>> origin/main
 import { specKit } from '@/core/spec/spec-kit';
 import { PhaseController } from '@/core/phase/controller';
 import { EventStore } from '@/core/events/store';
