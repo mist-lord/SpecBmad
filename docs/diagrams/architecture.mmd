@@ -1,0 +1,31 @@
+graph TB
+    subgraph Core
+        Orchestrator[Orchestrator]
+        PhaseCtrl[Phase Controller]
+        EventStore[Event Store]
+    end
+    subgraph Agents
+        Factory[Agent Factory]
+        BaseAgent[Base Agent]
+        ScrumMaster[Scrum Master]
+        Architect[Architect]
+    end
+    subgraph Bridge
+        PyBridge[Python Bridge]
+        SpecKit[Spec-Kit]
+        DeepCode[DeepCode]
+    end
+    subgraph LLM
+        Manager[LLM Manager]
+        Clients["Clients (OpenAI/Claude/Mock)"]
+    end
+    
+    Orchestrator --> PhaseCtrl
+    Orchestrator --> Factory
+    Orchestrator --> EventStore
+    Factory --> BaseAgent
+    BaseAgent --> Manager
+    BaseAgent --> PyBridge
+    PyBridge --> SpecKit
+    PyBridge --> DeepCode
+    PhaseCtrl --> DeepCode

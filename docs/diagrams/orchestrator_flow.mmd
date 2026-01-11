@@ -1,0 +1,18 @@
+flowchart TD
+    Start[Start Workflow] --> Init[Initialize Context]
+    Init --> PhaseLoop{Phase <= 5?}
+    PhaseLoop -- Yes --> CheckGate{Gate Check}
+    CheckGate -- Pass --> ExecuteAgent[Execute Phase Agent]
+    CheckGate -- Fail --> HandleError[Handle Error/Retry]
+    HandleError --> PhaseLoop
+    ExecuteAgent --> UpdateState[Update State & Events]
+    UpdateState --> NextPhase[Increment Phase]
+    NextPhase --> PhaseLoop
+    PhaseLoop -- No --> End[End Workflow]
+    
+    subgraph Agent Execution
+    ExecuteAgent --> LLM[Call LLM]
+    LLM --> Parse[Parse Response]
+    Parse --> Tools[Execute Tools]
+    Tools --> Result[Return Result]
+    end

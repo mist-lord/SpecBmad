@@ -1,0 +1,14 @@
+sequenceDiagram
+    participant TS as TypeScript(Node)
+    participant Bridge as PythonBridge
+    participant Execa as Execa(Process)
+    participant Py as Python Script
+    
+    TS->>Bridge: execute(script, args)
+    Bridge->>Bridge: detectPython()
+    Bridge->>Execa: spawn(python, [script, ...])
+    Execa->>Py: Run Script
+    Py-->>Execa: stdout/stderr
+    Execa-->>Bridge: Result
+    Bridge->>Bridge: Parse JSON/YAML
+    Bridge-->>TS: Return {success, output}

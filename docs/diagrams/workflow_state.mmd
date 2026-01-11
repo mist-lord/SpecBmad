@@ -1,0 +1,16 @@
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> Planning: Start Workflow
+    Planning --> Specification: Phase 1 Complete
+    Specification --> Development: Phase 2 Complete
+    Development --> Evaluation: Phase 3 Complete
+    Evaluation --> Deployment: Phase 4 Complete
+    Deployment --> Completed: Phase 5 Complete
+    
+    state Development {
+        [*] --> Coding
+        Coding --> Testing
+        Testing --> Review
+        Review --> Coding: Fixes Needed
+        Review --> [*]: Approved
+    }
