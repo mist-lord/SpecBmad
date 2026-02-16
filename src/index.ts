@@ -36,7 +36,6 @@ import { goCommand } from '@/commands/go';
 import { changeCommand } from '@/commands/change';
 import { exportCommand } from '@/commands/export';
 import { uiCommand } from '@/commands/ui';
-import { doctorCommand } from '@/commands/doctor';
 import { registerPhaseCommand } from '@/commands/phase';
 import { registerBuiltInStacks } from '@/core/stack';
 
@@ -118,8 +117,15 @@ program.addCommand(exportCommand);
 // Web 仪表盘
 program.addCommand(uiCommand);
 
-// 系统诊断
-program.addCommand(doctorCommand);
+// 系统诊断（懒加载，避免在 CLI 启动阶段加载可选依赖）
+program
+  .command('doctor')
+  .description('诊断环境配置')
+  .action(async () => {
+    const { Doctor } = await import('@/core/doctor');
+    const doctor = new Doctor();
+    await doctor.diagnose();
+  });
 
 // Phase 管理命令
 registerPhaseCommand(program);
