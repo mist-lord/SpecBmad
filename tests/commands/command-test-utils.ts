@@ -141,43 +141,79 @@ export function mockLLMManager(customClient?: any) {
 
 /**
  * Mock Orchestrator
+ * Returns AgentResult[] array (not object) to match source code expectations
+ * Uses prototype pattern to allow tests to override methods
  */
 export function mockOrchestrator() {
-  const mockResults = {
-    steps: [
-      { name: 'Phase 0: Specification', status: 'completed', duration: 100 },
-      { name: 'Phase 1: Architecture', status: 'completed', duration: 150 },
-    ],
-    summary: 'Workflow completed successfully',
-  };
+  // Must return AgentResult[] array - source code calls results.entries()
+  const mockResults = [
+    {
+      success: true,
+      message: 'Test workflow completed successfully',
+      data: {
+        steps: ['Phase 0', 'Phase 1'],
+        artifacts: [],
+      },
+      metadata: {
+        agent: 'Analyst',
+        mode: 'interactive',
+        sprint: 0,
+        prioritize: true,
+      },
+      nextSteps: ['Proceed to next phase'],
+    },
+  ];
+
+  // Create a constructor function that uses prototype methods
+  // This allows tests to override methods via Orchestrator.prototype.methodName = ...
+  function MockOrchestrator() {
+    // Instance delegates to prototype methods
+  }
+
+  // Set up prototype methods (can be overridden by tests)
+  MockOrchestrator.prototype.executeWorkflow = jest.fn().mockResolvedValue(mockResults);
+  MockOrchestrator.prototype.executePhaseWorkflow = jest.fn().mockResolvedValue(mockResults);
+  MockOrchestrator.prototype.executeWithRetry = jest.fn().mockResolvedValue(mockResults);
 
   return {
-    Orchestrator: jest.fn().mockImplementation(() => ({
-      executeWorkflow: jest.fn().mockResolvedValue(mockResults),
-      executePhaseWorkflow: jest.fn().mockResolvedValue(mockResults),
-      executeWithRetry: jest.fn().mockResolvedValue(mockResults),
-    })),
+    Orchestrator: MockOrchestrator,
   };
 }
 
 /**
  * Mock PhaseController
+ * transitionTo must return TransitionResult object (not boolean)
+ * Uses prototype pattern to allow tests to override methods
  */
 export function mockPhaseController() {
+  // TransitionResult structure expected by phase.ts:63,79
+  const mockTransitionResult = {
+    success: true,
+    timestamp: new Date().toISOString(),
+    gateResults: [],
+    error: undefined,
+  };
+
+  // Create a constructor function that uses prototype methods
+  function MockPhaseController() {
+    // Instance delegates to prototype methods
+  }
+
+  // Set up prototype methods (can be overridden by tests)
+  MockPhaseController.prototype.getCurrentPhase = jest.fn().mockReturnValue(0);
+  MockPhaseController.prototype.transitionTo = jest.fn().mockResolvedValue(mockTransitionResult);
+  MockPhaseController.prototype.canTransition = jest.fn().mockReturnValue(true);
+  MockPhaseController.prototype.getPhaseConfig = jest.fn().mockReturnValue({
+    name: 'Specification',
+    description: 'Define requirements',
+    gates: [],
+  });
+
   return {
-    PhaseController: jest.fn().mockImplementation(() => ({
-      getCurrentPhase: jest.fn().mockReturnValue(0),
-      transitionTo: jest.fn().mockResolvedValue(true),
-      canTransition: jest.fn().mockReturnValue(true),
-      getPhaseConfig: jest.fn().mockReturnValue({
-        name: 'Specification',
-        description: 'Define requirements',
-        gates: [],
-      }),
-    })),
+    PhaseController: MockPhaseController,
     phaseController: {
       getCurrentPhase: jest.fn().mockReturnValue(0),
-      transitionTo: jest.fn().mockResolvedValue(true),
+      transitionTo: jest.fn().mockResolvedValue(mockTransitionResult),
       canTransition: jest.fn().mockReturnValue(true),
     },
   };
@@ -185,15 +221,26 @@ export function mockPhaseController() {
 
 /**
  * Mock EventStore
+ * Uses prototype pattern to allow tests to override methods
  */
 export function mockEventStore() {
+  // Create a constructor function that uses prototype methods
+  function MockEventStore() {
+    // Instance delegates to prototype methods
+  }
+
+  // Set up prototype methods (can be overridden by tests)
+  MockEventStore.prototype.appendEvent = jest.fn();
+  MockEventStore.prototype.queryEvents = jest.fn().mockReturnValue([]);
+  MockEventStore.prototype.record = jest.fn();
+  MockEventStore.prototype.query = jest.fn().mockReturnValue([]);
+  MockEventStore.prototype.clear = jest.fn();
+
   return {
-    EventStore: jest.fn().mockImplementation(() => ({
-      record: jest.fn(),
-      query: jest.fn().mockReturnValue([]),
-      clear: jest.fn(),
-    })),
+    EventStore: MockEventStore,
     eventStore: {
+      appendEvent: jest.fn(),
+      queryEvents: jest.fn().mockReturnValue([]),
       record: jest.fn(),
       query: jest.fn().mockReturnValue([]),
     },
@@ -294,6 +341,25 @@ export const testFixtures = {
     force: false,
     validate: true,
   },
+
+  /**
+   * 示例AgentResult（用于mock orchestrator返回值）
+   */
+  agentResult: {
+    success: true,
+    message: 'Test workflow completed successfully',
+    data: {
+      steps: ['Phase 0', 'Phase 1'],
+      artifacts: [],
+    },
+    metadata: {
+      agent: 'Analyst',
+      mode: 'interactive',
+      sprint: 0,
+      prioritize: true,
+    },
+    nextSteps: ['Proceed to next phase'],
+  },
 };
 
 /**
@@ -322,4 +388,14 @@ export function assertDirectoryStructure(basePath: string, expectedDirs: string[
  */
 export function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Mock process.exit的辅助函数
+ * 返回一个spy，可以在测试结束后restore
+ */
+export function mockProcessExit() {
+  return jest.spyOn(process, 'exit').mockImplementation((code: any): never => {
+    throw new Error(`process.exit(${code})`);
+  });
 }

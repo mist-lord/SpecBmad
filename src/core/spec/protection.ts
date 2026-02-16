@@ -21,7 +21,7 @@ export class ArchitectureViolation extends Error {
 export class SpecProtection {
   private specDir: string;
 
-  constructor(projectRoot: string = process.cwd()) {
+  constructor(_projectRoot: string = process.cwd()) {
     this.specDir = getSpecPath();
   }
 

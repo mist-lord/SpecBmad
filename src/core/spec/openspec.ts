@@ -1,10 +1,15 @@
 /**
- * OpenSpec 集成 (Phase 1)
- * 
- * 调用 OpenSpec Python 脚本
- * 输入：/spec/intent.yaml
- * 输出：/spec/formal_spec.yaml + Gate 结果
- * Gate 机制：OpenSpec 失败时阻断 Phase 1→2
+ * @deprecated 4-Phase MVP 不再使用 OpenSpec 形式化验证
+ *
+ * 此文件保留用于向后兼容，但在 4-Phase MVP 中不会被调用。
+ * 如果需要形式化验证功能，可以在未来扩展实现。
+ *
+ * 原功能说明：
+ * - OpenSpec 集成 (原 Phase 1)
+ * - 调用 OpenSpec Python 脚本
+ * - 输入：/spec/intent.yaml
+ * - 输出：/spec/formal_spec.yaml + Gate 结果
+ * - Gate 机制：OpenSpec 失败时阻断 Phase 1→2
  */
 
 import { pythonBridge } from '../bridge/python';
@@ -148,7 +153,7 @@ export class OpenSpecIntegration {
     try {
       // 读取 intent.yaml
       const intentContent = fs.readFileSync(intentSpecPath, 'utf-8');
-      const intentSpec = yaml.parse(intentContent);
+      const _intentSpec = yaml.parse(intentContent);
 
       // 生成简单的 Formal Spec
       const formalSpec: FormalSpec = {
@@ -219,7 +224,7 @@ export class OpenSpecGateChecker implements GateChecker {
     this.openSpec = new OpenSpecIntegration();
   }
 
-  async checkGate(gateId: string, context: GateCheckContext): Promise<GateResult> {
+  async checkGate(gateId: string, _context: GateCheckContext): Promise<GateResult> {
     if (gateId !== 'openspec_passed') {
       return {
         gateId,

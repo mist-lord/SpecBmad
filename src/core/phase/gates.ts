@@ -1,6 +1,6 @@
 /**
  * Gate 检查器
- * 
+ *
  * 统一 Gate 检查接口，支持 OpenSpec Gate、DeepCode Gate 等
  */
 
@@ -16,6 +16,10 @@ export interface GateCheckContext {
   projectRoot: string;
   metadata?: Record<string, unknown>;
 }
+
+// GateEvent is defined in ./types.ts - use import from there if needed
+// Re-export for backward compatibility
+export type { GateEvent } from './types';
 
 /**
  * Gate 检查器注册表
@@ -76,24 +80,62 @@ class GateRegistry {
 
 export const gateRegistry = new GateRegistry();
 
-// 延迟注册，避免循环依赖和 ESM 问题
-export function registerDefaultGates(): void {
-  // 延迟导入，避免在测试时触发 execa 导入问题
-  Promise.all([
-    import('@/core/spec/openspec'),
-    import('@/core/verification/deepcode')
-  ]).then(([openspecModule, deepcodeModule]) => {
-    const { OpenSpecGateChecker } = openspecModule;
-    const { DeepCodeGateChecker, VerificationGateChecker } = deepcodeModule;
-    
-    gateRegistry.register('openspec_passed', new OpenSpecGateChecker());
-    gateRegistry.register('deepcode_passed', new DeepCodeGateChecker());
-    gateRegistry.register('verification_passed', new VerificationGateChecker());
-  }).catch((error) => {
-    // 在测试环境中，如果导入失败，静默忽略
-    if (process.env.NODE_ENV !== 'test') {
-      console.warn('Gate 检查器注册失败:', error);
+/**
+ * Review Gate 检查器
+ *
+ * 4-Phase MVP 中唯一的 Gate，检查 QA Review 是否通过
+ */
+class ReviewGateChecker implements GateChecker {
+  async checkGate(gateId: string, context: GateCheckContext): Promise<GateResult> {
+    // 检查是否存在 review_report.md 且标记为通过
+    const fs = await import('fs');
+    const path = await import('path');
+
+    const reviewReportPath = path.join(
+      context.projectRoot,
+      '.specbmad',
+      'artifacts',
+      'review_report.md'
+    );
+
+    if (!fs.existsSync(reviewReportPath)) {
+      return {
+        gateId,
+        passed: true,  // 没有 review report 时默认通过（首次运行）
+        blocking: true,
+        message: 'Review report 不存在，默认通过'
+      };
     }
-  });
+
+    try {
+      const content = fs.readFileSync(reviewReportPath, 'utf-8');
+      // 简单检查：如果报告包含 "PASSED" 或 "通过" 则通过
+      const passed = /\b(PASSED|通过|approved)\b/i.test(content);
+
+      return {
+        gateId,
+        passed,
+        blocking: true,
+        message: passed ? 'QA Review 通过' : 'QA Review 未通过，需要修复问题'
+      };
+    } catch (error) {
+      return {
+        gateId,
+        passed: false,
+        blocking: true,
+        message: `读取 review report 失败: ${error instanceof Error ? error.message : String(error)}`
+      };
+    }
+  }
+}
+
+/**
+ * 注册默认 Gate
+ *
+ * 4-Phase MVP 只需要一个 Gate: review_passed
+ */
+export async function registerDefaultGates(): Promise<void> {
+  gateRegistry.register('review_passed', new ReviewGateChecker());
+  log.debug('已注册 4-Phase MVP Gate: review_passed');
 }
 

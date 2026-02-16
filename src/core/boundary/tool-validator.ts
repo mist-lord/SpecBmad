@@ -13,6 +13,7 @@
  */
 
 import * as path from 'path';
+import * as fs from 'fs';
 import {
   AgentContract,
   IToolValidator,
@@ -263,9 +264,38 @@ export class ToolValidator implements IToolValidator {
 
   /**
    * Check for dangerous command patterns
+   *
+   * @security SEC-003 fix: Applies Unicode normalization before pattern matching
+   * to prevent bypass via fullwidth characters (e.g., ｒｍ), zero-width characters,
+   * or bidirectional text overrides.
    */
   hasDangerousCommand(command: string): boolean {
-    return DANGEROUS_COMMAND_PATTERNS.some((pattern) => pattern.test(command));
+    const normalized = this.normalizeForSecurity(command);
+    return DANGEROUS_COMMAND_PATTERNS.some((pattern) => pattern.test(normalized));
+  }
+
+  /**
+   * Normalize a string for security validation
+   *
+   * Applies NFKD normalization and removes potentially dangerous Unicode characters:
+   * - Zero-width characters (U+200B-U+200D, U+2060, U+FEFF)
+   * - Bidirectional control characters (U+202A-U+202E)
+   *
+   * @see SEC-003: Unicode/encoding bypass prevention
+   */
+  private normalizeForSecurity(input: string): string {
+    return (
+      input
+        // NFKD normalization: decomposes characters and converts fullwidth to ASCII
+        // e.g., ｒｍ (U+FF52 U+FF4D) → rm (U+0072 U+006D)
+        .normalize('NFKD')
+        // Remove zero-width characters that could split command words
+        // U+200B Zero Width Space, U+200C ZWNJ, U+200D ZWJ, U+2060 Word Joiner, U+FEFF BOM
+        .replace(/[\u200B-\u200D\u2060\uFEFF]/g, '')
+        // Remove bidirectional text control characters (RTL/LTR overrides)
+        // U+202A-U+202E can be used to visually disguise malicious commands
+        .replace(/[\u202A-\u202E]/g, '')
+    );
   }
 
   /**
@@ -304,13 +334,15 @@ export class ToolValidator implements IToolValidator {
    *
    * SECURITY: All tools with path parameters are validated against allowed_paths.
    * This includes read tools (Read, Glob, Grep) to prevent arbitrary filesystem access.
-   * @see Codex security review - CRITICAL finding
+   * @see Codex security review - CRITICAL finding SEC-001
    */
   private validatePathParam(
     filePath: string,
     contract: AgentContract,
     toolName: string
   ): Permission {
+    const projectRoot = process.cwd();
+
     // 1. Check for directory traversal - applies to ALL tools
     if (this.hasPathTraversal(filePath)) {
       return {
@@ -320,25 +352,57 @@ export class ToolValidator implements IToolValidator {
       };
     }
 
-    // 2. Resolve and validate absolute paths
-    // Absolute paths outside project root are rejected
-    if (path.isAbsolute(filePath)) {
-      const projectRoot = process.cwd();
-      const realPath = path.resolve(filePath);
-      if (!realPath.startsWith(projectRoot)) {
+    // 2. Check for symlink escape attacks (SEC-001 fix)
+    // Only check existing files that might be symlinks
+    let realPath: string;
+    let isSymlink = false;
+    let fileExists = false;
+
+    try {
+      // Check if file exists and is a symlink
+      const stats = fs.lstatSync(filePath);
+      fileExists = true;
+      isSymlink = stats.isSymbolicLink();
+
+      if (isSymlink) {
+        // Resolve the symlink to get the real path
+        realPath = fs.realpathSync(filePath);
+      } else {
+        realPath = path.resolve(filePath);
+      }
+    } catch {
+      // File doesn't exist yet (e.g., for Write operations) - use path.resolve
+      realPath = path.resolve(filePath);
+    }
+
+    // 3. Validate that real path stays within project root
+    if (!realPath.startsWith(projectRoot)) {
+      // Only report symlink-escape if it's actually a symlink
+      if (isSymlink) {
+        return {
+          allowed: false,
+          reason: 'symlink-escape-detected',
+          details: {
+            path: filePath,
+            realPath,
+            projectRoot,
+            reason: 'Symlink resolves outside project root',
+          },
+        };
+      } else {
         return {
           allowed: false,
           reason: 'path-not-allowed',
           details: {
             path: filePath,
-            reason: 'Absolute path outside project root',
+            reason: 'Path outside project root',
             projectRoot,
           },
         };
       }
     }
 
-    // 3. Check spec protection for write operations
+    // 4. Check spec protection for write operations
     const writeTools = ['Write', 'Edit', 'Delete'];
     if (writeTools.includes(toolName) && this.isSpecProtected(filePath)) {
       return {
@@ -351,14 +415,20 @@ export class ToolValidator implements IToolValidator {
       };
     }
 
-    // 4. Check path allowlist for ALL tools (not just write tools)
-    // CRITICAL FIX: Read/Glob/Grep must also be constrained
-    if (!this.isPathAllowed(filePath, contract.allowed_paths)) {
+    // 5. Check path allowlist for ALL tools (not just write tools)
+    // Use realPath for allowlist check to prevent symlink bypass
+    const pathToCheck = this.normalizePath(
+      realPath.startsWith(projectRoot)
+        ? realPath.slice(projectRoot.length + 1)
+        : realPath
+    );
+    if (!this.isPathAllowed(pathToCheck, contract.allowed_paths)) {
       return {
         allowed: false,
         reason: 'path-not-allowed',
         details: {
           path: filePath,
+          realPath: pathToCheck,
           tool: toolName,
           allowedPaths: contract.allowed_paths,
         },

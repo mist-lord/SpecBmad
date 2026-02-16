@@ -3,6 +3,9 @@ import { changeManager } from '@/core/change/manager';
 
 export const changesRouter: Router = Router();
 
+const getChangeId = (req: Request): string =>
+  Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+
 // 获取所有变更提案
 changesRouter.get('/', (req: Request, res: Response) => {
   try {
@@ -16,7 +19,7 @@ changesRouter.get('/', (req: Request, res: Response) => {
 // 获取单个提案
 changesRouter.get('/:id', (req: Request, res: Response) => {
   try {
-    const proposal = changeManager.getProposal(req.params.id);
+    const proposal = changeManager.getProposal(getChangeId(req));
     if (!proposal) {
       return res.status(404).json({ error: 'Proposal not found' });
     }
@@ -47,7 +50,7 @@ changesRouter.patch('/:id/status', (req: Request, res: Response) => {
     if (!status) {
       return res.status(400).json({ error: 'Status is required' });
     }
-    changeManager.updateStatus(req.params.id, status);
+    changeManager.updateStatus(getChangeId(req), status);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
@@ -58,7 +61,7 @@ changesRouter.patch('/:id/status', (req: Request, res: Response) => {
 changesRouter.post('/:id/apply', async (req: Request, res: Response) => {
   try {
     const { force } = req.body;
-    await changeManager.applyProposal(req.params.id, force);
+    await changeManager.applyProposal(getChangeId(req), force);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
@@ -68,7 +71,7 @@ changesRouter.post('/:id/apply', async (req: Request, res: Response) => {
 // 获取提案进度
 changesRouter.get('/:id/progress', (req: Request, res: Response) => {
   try {
-    const progress = changeManager.getProgress(req.params.id);
+    const progress = changeManager.getProgress(getChangeId(req));
     if (!progress) {
       return res.status(404).json({ error: 'Proposal not found' });
     }

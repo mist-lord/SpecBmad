@@ -111,7 +111,7 @@ export const analyzeCommand = new Command('analyze')
 
       if (options.output) args.push('--output', options.output);
       if (options.verbose) args.push('--verbose');
-      // TODO: Python 桥接器也需要支持 --proposal 参数
+      if (options.proposal) args.push('--proposal', options.proposal);
 
       log.info(`执行分析命令: python ${args.join(' ')}`);
 

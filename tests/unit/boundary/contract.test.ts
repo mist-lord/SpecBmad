@@ -207,6 +207,59 @@ agents:
       expect(qa?.allowed_tools).not.toContain('Edit');
       expect(qa?.scope.forbidden).toContain('代码编写');
     });
+
+    it('should have correct SecurityExpert contract (ARCH-001)', () => {
+      const securityExpert = loader.getContract('SecurityExpert');
+
+      // SecurityExpert should be defined
+      expect(securityExpert).toBeDefined();
+      expect(securityExpert?.name).toBe('SecurityExpert');
+
+      // Should have read-only access (no Bash, no Edit)
+      expect(securityExpert?.allowed_tools).toContain('Read');
+      expect(securityExpert?.allowed_tools).toContain('Glob');
+      expect(securityExpert?.allowed_tools).toContain('Grep');
+      expect(securityExpert?.allowed_tools).toContain('Write');
+      expect(securityExpert?.allowed_tools).not.toContain('Bash');
+      expect(securityExpert?.allowed_tools).not.toContain('Edit');
+
+      // Should have access to source, tests, and docs for review
+      expect(securityExpert?.allowed_paths).toContain('./src/**');
+      expect(securityExpert?.allowed_paths).toContain('./tests/**');
+      expect(securityExpert?.allowed_paths).toContain('./docs/**');
+      expect(securityExpert?.allowed_paths).toContain('./spec/**');
+
+      // Should be forbidden from writing code
+      expect(securityExpert?.scope.forbidden).toContain('代码编写');
+    });
+  });
+
+  describe('SecurityExpert Contract Integration', () => {
+    it('should have all five default agents including SecurityExpert', () => {
+      const agents = ['Analyst', 'Architect', 'Developer', 'QA', 'SecurityExpert'];
+
+      for (const agent of agents) {
+        const contract = loader.getContract(agent);
+        expect(contract).toBeDefined();
+        expect(contract?.name).toBe(agent);
+      }
+    });
+
+    it('should allow SecurityExpert to read security-sensitive files', () => {
+      const securityExpert = loader.getContract('SecurityExpert');
+
+      // Verify paths include all areas a security expert needs to review
+      const criticalPaths = ['./src/**', './tests/**', './config/**'];
+      for (const criticalPath of criticalPaths) {
+        expect(securityExpert?.allowed_paths).toContain(criticalPath);
+      }
+    });
+
+    it('should have SecurityExpert output schema as SecurityReport', () => {
+      const securityExpert = loader.getContract('SecurityExpert');
+
+      expect(securityExpert?.output_schema).toBe('SecurityReport');
+    });
   });
 });
 

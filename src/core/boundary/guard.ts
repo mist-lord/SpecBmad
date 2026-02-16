@@ -28,6 +28,7 @@ import {
 } from './types';
 import { CircuitBreaker, createCircuitBreaker } from './circuit-breaker';
 import { ToolValidator, createToolValidator } from './tool-validator';
+import { OutputSchemaRegistry } from './schemas/output-schemas';
 
 /**
  * Check if an object has getters, toJSON, or other properties that could
@@ -325,17 +326,19 @@ export class BoundaryGuard implements IBoundaryGuard {
   /**
    * Validate tool output (PostToolUse hook)
    *
+   * Validates agent output against the schema defined in their contract.
+   * Uses Zod for runtime type validation.
+   *
    * @param output - The tool execution result
-   * @param schema - The expected output schema name
-   * @returns Validation result
+   * @param schema - The expected output schema name (e.g., 'CodeArtifacts', 'QAReport')
+   * @returns Validation result with errors if validation fails
+   * @see SEC-005: Zod-based output validation
    */
   async validateOutput(
     output: unknown,
     schema: string
   ): Promise<ValidationResult> {
-    // TODO: Implement schema validation using zod or JSON Schema
-    // For now, basic structural validation
-
+    // 1. Check for null/undefined (fail-fast)
     if (output === undefined || output === null) {
       return {
         valid: false,
@@ -343,9 +346,31 @@ export class BoundaryGuard implements IBoundaryGuard {
       };
     }
 
-    // Schema validation would go here
-    // const schemaValidator = this.getSchemaValidator(schema);
-    // return schemaValidator.validate(output);
+    // 2. Look up the Zod schema from the registry
+    const zodSchema = OutputSchemaRegistry[schema];
+    if (!zodSchema) {
+      // Fail-closed: unknown schemas are not allowed
+      return {
+        valid: false,
+        errors: [`Unknown output schema: ${schema}. Registered schemas: ${Object.keys(OutputSchemaRegistry).join(', ')}`],
+      };
+    }
+
+    // 3. Validate using Zod's safeParse (doesn't throw)
+    const result = zodSchema.safeParse(output);
+
+    if (!result.success) {
+      // Extract error messages from Zod validation errors
+      const errors = result.error.errors.map((err) => {
+        const path = err.path.length > 0 ? `${err.path.join('.')}: ` : '';
+        return `${path}${err.message}`;
+      });
+
+      return {
+        valid: false,
+        errors,
+      };
+    }
 
     return { valid: true };
   }

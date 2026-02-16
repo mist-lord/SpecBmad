@@ -11,7 +11,7 @@ import { PhaseController } from '@/core/phase/controller';
 import { EventStore, PhaseEvent } from '@/core/events/store';
 import { log } from '@/utils/logger';
 import { registerDefaultGates } from '@/core/phase/gates';
-import { PhaseContext } from '@/core/phase/types';
+import { PhaseContext, PhaseNumber } from '@/core/phase/types';
 
 export interface PhaseCommandOptions {
   show?: boolean;
@@ -31,19 +31,22 @@ export async function phaseCommand(options: PhaseCommandOptions): Promise<void> 
     if (options.show !== false && !options.transition && !options.history) {
       const currentPhase = controller.getCurrentPhase();
       log.info(`当前 Phase: ${currentPhase}`);
-      log.info(`Phase 说明:`);
-      log.info(`  Phase 0: Intent Capture`);
-      log.info(`  Phase 1: Formal Specification`);
-      log.info(`  Phase 2: Architecture & Planning`);
-      log.info(`  Phase 3: Implementation`);
-      log.info(`  Phase 4: Verification`);
-      log.info(`  Phase 5: Iteration / Evolution`);
+      log.info(`Phase 说明 (4-Phase MVP):`);
+      log.info(`  Phase 0: Capture (需求捕获)`);
+      log.info(`  Phase 1: Design (架构设计)`);
+      log.info(`  Phase 2: Build (实现)`);
+      log.info(`  Phase 3: Review (验收)`);
       return;
     }
 
     // 手动触发 Phase 迁移
     if (options.transition !== undefined) {
-      const targetPhase = options.transition as 0 | 1 | 2 | 3 | 4 | 5;
+      const requestedPhase = Number(options.transition);
+      if (![0, 1, 2, 3].includes(requestedPhase)) {
+        log.error(`无效 Phase: ${requestedPhase}，仅支持 0-3`);
+        process.exit(1);
+      }
+      const targetPhase = requestedPhase as PhaseNumber;
       const currentPhase = controller.getCurrentPhase();
 
       log.info(`尝试从 Phase ${currentPhase} 迁移到 Phase ${targetPhase}`);
@@ -125,10 +128,9 @@ export function registerPhaseCommand(program: Command): void {
     .command('phase')
     .description('管理 Phase（显示当前 Phase、触发迁移、查看历史）')
     .option('--show', '显示当前 Phase（默认）')
-    .option('--transition <phase>', '迁移到指定 Phase (0-5)', (val) => parseInt(val, 10))
+    .option('--transition <phase>', '迁移到指定 Phase (0-3)', (val) => parseInt(val, 10))
     .option('--history', '查看 Phase 历史')
     .action(async (options: PhaseCommandOptions) => {
       await phaseCommand(options);
     });
 }
-

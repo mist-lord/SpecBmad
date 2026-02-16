@@ -27,11 +27,7 @@ jobs:
       - name: Enable Corepack & activate pnpm
         run: |
           corepack enable
-<<<<<<< HEAD
           corepack prepare pnpm@10.20.0 --activate
-=======
-          corepack prepare pnpm@9.15.4 --activate
->>>>>>> origin/main
       - name: Install deps
         run: pnpm install --frozen-lockfile
       - name: Lint
@@ -121,11 +117,7 @@ jobs:
       - name: Enable Corepack & activate pnpm
         run: |
           corepack enable
-<<<<<<< HEAD
           corepack prepare pnpm@10.20.0 --activate
-=======
-          corepack prepare pnpm@9.15.4 --activate
->>>>>>> origin/main
       - name: Install deps
         run: pnpm install --frozen-lockfile
       - name: Build

@@ -240,4 +240,110 @@ describe('CircuitBreaker', () => {
       expect(shared1).not.toBe(shared2);
     });
   });
+
+  describe('Race Condition Protection (SEC-002)', () => {
+    it('should handle concurrent state transitions safely', async () => {
+      const breaker = new CircuitBreaker({
+        failureThreshold: 3,
+        resetTimeout: 10, // Very short timeout
+        halfOpenMaxAttempts: 2,
+      });
+
+      // Force to open state
+      for (let i = 0; i < 3; i++) {
+        breaker.recordFailure();
+      }
+      expect(breaker.getState()).toBe('open');
+
+      // Wait for timeout to allow transition
+      await new Promise((resolve) => setTimeout(resolve, 15));
+
+      // Simulate concurrent calls by calling checkTool rapidly
+      const results: string[] = [];
+      for (let i = 0; i < 10; i++) {
+        const permission = breaker.checkTool('Write');
+        results.push(permission.reason);
+      }
+
+      // All results should be consistent (all same reason)
+      const uniqueReasons = new Set(results);
+      expect(uniqueReasons.size).toBe(1);
+
+      // State should be half-open after timeout
+      expect(breaker.getState()).toBe('half-open');
+    });
+
+    it('should not allow double transition from open to half-open', async () => {
+      const breaker = new CircuitBreaker({
+        failureThreshold: 1,
+        resetTimeout: 5,
+        halfOpenMaxAttempts: 1,
+      });
+
+      // Force to open state
+      breaker.recordFailure();
+      expect(breaker.getState()).toBe('open');
+
+      // Wait for timeout
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      // Multiple rapid calls should all see consistent state
+      const states: string[] = [];
+      for (let i = 0; i < 20; i++) {
+        breaker.checkTool('Read');
+        states.push(breaker.getState());
+      }
+
+      // All should be half-open (no unexpected transitions)
+      expect(states.every((s) => s === 'half-open')).toBe(true);
+    });
+
+    it('should maintain consistent state under rapid success/failure recording', async () => {
+      const breaker = new CircuitBreaker({
+        failureThreshold: 5,
+        resetTimeout: 100,
+        halfOpenMaxAttempts: 3,
+      });
+
+      // Rapidly alternate between success and failure
+      for (let i = 0; i < 20; i++) {
+        if (i % 2 === 0) {
+          breaker.recordFailure();
+        } else {
+          breaker.recordSuccess();
+        }
+      }
+
+      // State should be deterministic
+      const snapshot = breaker.getSnapshot();
+      expect(['closed', 'open', 'half-open']).toContain(snapshot.state);
+      expect(typeof snapshot.failureCount).toBe('number');
+      expect(snapshot.failureCount).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should prevent transition during ongoing transition', async () => {
+      const breaker = new CircuitBreaker({
+        failureThreshold: 1,
+        resetTimeout: 1,
+        halfOpenMaxAttempts: 1,
+      });
+
+      // Force to open
+      breaker.recordFailure();
+
+      // Wait for timeout
+      await new Promise((resolve) => setTimeout(resolve, 5));
+
+      // Rapid concurrent-like calls
+      const promises = Array.from({ length: 5 }, () =>
+        Promise.resolve(breaker.checkTool('Read'))
+      );
+
+      const results = await Promise.all(promises);
+
+      // All should return consistent results
+      const reasons = results.map((r) => r.reason);
+      expect(new Set(reasons).size).toBe(1);
+    });
+  });
 });

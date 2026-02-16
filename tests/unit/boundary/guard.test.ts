@@ -200,7 +200,7 @@ describe('BoundaryGuard', () => {
     });
   });
 
-  describe('validateOutput', () => {
+  describe('validateOutput (SEC-005)', () => {
     it('should reject null output', async () => {
       const result = await guard.validateOutput(null, 'CodeArtifacts');
 
@@ -208,10 +208,92 @@ describe('BoundaryGuard', () => {
       expect(result.errors).toContain('Output is null or undefined');
     });
 
-    it('should accept valid output', async () => {
-      const result = await guard.validateOutput({ data: 'test' }, 'CodeArtifacts');
+    it('should reject undefined output', async () => {
+      const result = await guard.validateOutput(undefined, 'CodeArtifacts');
+
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContain('Output is null or undefined');
+    });
+
+    it('should reject unknown schema names (fail-closed)', async () => {
+      const result = await guard.validateOutput({ data: 'test' }, 'UnknownSchema');
+
+      expect(result.valid).toBe(false);
+      expect(result.errors?.[0]).toContain('Unknown output schema');
+    });
+
+    it('should accept valid CodeArtifacts output', async () => {
+      const validCodeArtifacts = {
+        files: [
+          { path: 'src/index.ts', content: 'console.log("hello");', language: 'typescript' },
+        ],
+      };
+      const result = await guard.validateOutput(validCodeArtifacts, 'CodeArtifacts');
 
       expect(result.valid).toBe(true);
+    });
+
+    it('should reject invalid CodeArtifacts output (missing files)', async () => {
+      const invalidOutput = { metadata: { agent: 'Developer' } };
+      const result = await guard.validateOutput(invalidOutput, 'CodeArtifacts');
+
+      expect(result.valid).toBe(false);
+      expect(result.errors).toBeDefined();
+      expect(result.errors?.some((e) => e.includes('files'))).toBe(true);
+    });
+
+    it('should accept valid QAReport output', async () => {
+      const validQAReport = {
+        summary: { passed: 10, failed: 2, skipped: 1, coverage: 85 },
+        testResults: [
+          { name: 'test1', status: 'passed' },
+          { name: 'test2', status: 'failed', error: 'assertion failed' },
+        ],
+      };
+      const result = await guard.validateOutput(validQAReport, 'QAReport');
+
+      expect(result.valid).toBe(true);
+    });
+
+    it('should reject invalid QAReport output (invalid status)', async () => {
+      const invalidReport = {
+        summary: { passed: 10, failed: 2 },
+        testResults: [{ name: 'test1', status: 'unknown' }], // invalid status
+      };
+      const result = await guard.validateOutput(invalidReport, 'QAReport');
+
+      expect(result.valid).toBe(false);
+    });
+
+    it('should accept valid SecurityReport output', async () => {
+      const validSecurityReport = {
+        summary: { critical: 0, high: 1, medium: 2, low: 3 },
+        findings: [
+          {
+            id: 'SEC-001',
+            severity: 'HIGH',
+            title: 'SQL Injection',
+            description: 'Unsanitized input in query',
+            location: 'src/db.ts:42',
+          },
+        ],
+        passed: false,
+      };
+      const result = await guard.validateOutput(validSecurityReport, 'SecurityReport');
+
+      expect(result.valid).toBe(true);
+    });
+
+    it('should provide detailed error paths for nested validation failures', async () => {
+      const invalidOutput = {
+        files: [
+          { path: '', content: 'code' }, // path is empty string, should fail min(1)
+        ],
+      };
+      const result = await guard.validateOutput(invalidOutput, 'CodeArtifacts');
+
+      expect(result.valid).toBe(false);
+      expect(result.errors?.some((e) => e.includes('files'))).toBe(true);
     });
   });
 

@@ -283,7 +283,7 @@ export class ProjectStatusManager {
                 readDirRecursive(fullPath, baseDir);
               } else if (entry.isFile()) {
                 const fileName = entry.name;
-                const relativePath = path.relative(baseDir, fullPath);
+                const _relativePath = path.relative(baseDir, fullPath);
                 
                 if (fileName.includes('spec') || fileName.includes('requirement')) {
                   files.specifications.push(fullPath);

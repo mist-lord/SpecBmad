@@ -59,6 +59,7 @@ export type PermissionReason =
   | 'tool-not-allowed'
   | 'path-not-allowed'
   | 'path-traversal-detected'
+  | 'symlink-escape-detected'  // SEC-001: Symlink points outside project root
   | 'spec-protection'
   | 'command-injection-detected'
   | 'contract-not-found'

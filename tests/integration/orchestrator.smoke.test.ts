@@ -1,6 +1,6 @@
 import { Orchestrator } from '@/core/workflow/orchestrator';
 import { renderWorkflowMarkdownSummary } from '@/utils/summary';
-import { registerScrumMasterAgent } from '@/agents/scrum-master';
+import { registerBuiltInAgents } from '@/agents';
 import { AgentContext } from '@/types';
 
 // Mock LLM manager to avoid real API calls and return deterministic outputs
@@ -34,11 +34,11 @@ jest.mock('@/core/llm/manager', () => {
 
 describe('Orchestrator smoke test', () => {
   beforeAll(() => {
-    // Ensure ScrumMaster agent is registered for factory usage
-    registerScrumMasterAgent();
+    // Ensure all agents are registered for factory usage
+    registerBuiltInAgents();
   });
 
-  test('planning-only workflow passes format and renders markdown summary', async () => {
+  test('design-only workflow passes format and renders markdown summary', async () => {
     const orchestrator = new Orchestrator();
 
     const ctx: AgentContext = {
@@ -53,14 +53,12 @@ describe('Orchestrator smoke test', () => {
       inputData: {}
     };
 
-    // Execute with default format set to JSON to verify propagation
-    const results = await orchestrator.executeWorkflow('planning-only', ctx, 'json');
+    // Execute design-only workflow (4-Phase MVP: Capture → Design)
+    const results = await orchestrator.executeWorkflow('design-only', ctx, 'json');
 
     expect(results.length).toBe(2);
     for (const r of results) {
       expect(r.success).toBe(true);
-      // ScrumMasterAgent stores received format in metadata
-      expect(r.metadata?.format).toBe('json');
       // Metrics should be present and numeric
       expect(r.metadata?.metrics).toBeDefined();
       const m = r.metadata?.metrics!;
@@ -69,18 +67,15 @@ describe('Orchestrator smoke test', () => {
       expect(typeof m.latencyMs).toBe('number');
     }
 
-    const summary = renderWorkflowMarkdownSummary('planning-only', results);
+    const summary = renderWorkflowMarkdownSummary('design-only', results);
     // High-level sections
-    expect(summary).toContain('# 工作流汇总: planning-only');
+    expect(summary).toContain('# 工作流汇总: design-only');
     expect(summary).toContain('## LLM Usage');
     expect(summary).toContain('Tokens In:');
     expect(summary).toContain('Tokens Out:');
-    expect(summary).toContain('## Next Actions');
-    expect(summary).toContain('## Sprint Goals');
-    expect(summary).toContain('## Stories');
     expect(summary).toContain('## Steps Summary');
-    // Step details include agent name
-    expect(summary).toContain('agent=ScrumMaster');
+    // Step details include agent name (4-Phase MVP uses Analyst and Architect)
+    expect(summary).toContain('agent=Analyst');
     expect(summary).toContain('Step 1');
     expect(summary).toContain('Step 2');
   });

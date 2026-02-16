@@ -46,6 +46,8 @@ export class CircuitBreaker {
   private lastFailureTime = 0;
   private halfOpenAttempts = 0;
   private readonly config: CircuitBreakerConfig;
+  // SEC-002 fix: Guard against re-entrant state transitions
+  private transitionInProgress = false;
 
   constructor(config: Partial<CircuitBreakerConfig> = {}) {
     this.config = {
@@ -192,19 +194,37 @@ export class CircuitBreaker {
     this.failureCount = 0;
     this.lastFailureTime = 0;
     this.halfOpenAttempts = 0;
+    this.transitionInProgress = false;
   }
 
   /**
    * Update state based on timeout (transition from open to half-open)
+   *
+   * SEC-002 fix: Uses transitionInProgress guard to prevent race conditions
+   * in concurrent async contexts where multiple calls could trigger simultaneous
+   * state transitions.
    */
   private updateState(): void {
-    if (this.state === 'open') {
-      const elapsed = Date.now() - this.lastFailureTime;
+    // Prevent re-entrant transitions (SEC-002 race condition fix)
+    if (this.transitionInProgress) {
+      return;
+    }
 
-      if (elapsed >= this.config.resetTimeout) {
-        // Timeout exceeded, transition to half-open for recovery probe
-        this.state = 'half-open';
-        this.halfOpenAttempts = 0;
+    if (this.state === 'open') {
+      this.transitionInProgress = true;
+      try {
+        const elapsed = Date.now() - this.lastFailureTime;
+
+        if (elapsed >= this.config.resetTimeout) {
+          // Double-check pattern: verify state hasn't changed
+          if (this.state === 'open') {
+            // Timeout exceeded, transition to half-open for recovery probe
+            this.state = 'half-open';
+            this.halfOpenAttempts = 0;
+          }
+        }
+      } finally {
+        this.transitionInProgress = false;
       }
     }
   }

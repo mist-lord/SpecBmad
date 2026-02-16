@@ -46,21 +46,22 @@ describe('workflow command', () => {
     const content = fs.readFileSync(outPath, 'utf-8');
     expect(content).toContain('# 工作流汇总: full-development');
     expect(content).toContain('## LLM Usage');
-    // Steps summary should include agents used in the workflow
-    expect(content).toContain('agent=ScrumMaster');
+    // Steps summary should include agents used in the 4-Phase MVP workflow
+    expect(content).toContain('agent=Analyst');
     expect(content).toContain('agent=Developer');
     expect(content).toContain('agent=QA');
   });
 
   test('writes json summary when format=json', async () => {
     const outPath = path.join(getProjectPath(PATHS.ARTIFACTS_DIR), `workflow-summary-test-${Date.now()}.json`);
-    await workflowCommand({ name: 'planning-only', format: 'json', output: outPath } as any);
+    // 4-Phase MVP: use 'design-only' workflow instead of deleted 'planning-only'
+    await workflowCommand({ name: 'design-only', format: 'json', output: outPath } as any);
 
     const obj = JSON.parse(fs.readFileSync(outPath, 'utf-8'));
-    expect(obj.workflow).toBe('planning-only');
+    expect(obj.workflow).toBe('design-only');
     expect(Array.isArray(obj.steps)).toBe(true);
     expect(obj.steps.length).toBeGreaterThan(0);
-    // Each step includes agent metadata when available
-    expect(obj.steps.some((s: any) => s.agent === 'ScrumMaster')).toBe(true);
+    // 4-Phase MVP: design-only workflow uses Analyst and Architect agents
+    expect(obj.steps.some((s: any) => s.agent === 'Analyst')).toBe(true);
   });
 });

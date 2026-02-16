@@ -42,7 +42,8 @@ afterAll(() => {
 
 describe('workflow naming options', () => {
   test('adds date prefix when --date-prefix is enabled', async () => {
-    await workflowCommand({ name: 'planning-only', format: 'markdown', reportDir, datePrefix: true } as any);
+    // 4-Phase MVP: use 'design-only' workflow instead of deleted 'planning-only'
+    await workflowCommand({ name: 'design-only', format: 'markdown', reportDir, datePrefix: true } as any);
     const files = fs.readdirSync(reportDir).filter(f => f.endsWith('.md'));
     // Expect a file like YYYYMMDD-HHmmss-workflow.md
     const matched = files.some(f => /^\d{8}-\d{6}-workflow\.md$/.test(f));
@@ -50,10 +51,11 @@ describe('workflow naming options', () => {
   });
 
   test('dedup adds incremental suffix when file exists', async () => {
+    // 4-Phase MVP: use 'design-only' workflow instead of deleted 'planning-only'
     // First write without date prefix
-    await workflowCommand({ name: 'planning-only', format: 'markdown', reportDir, dedupe: true } as any);
+    await workflowCommand({ name: 'design-only', format: 'markdown', reportDir, dedupe: true } as any);
     // Second write should avoid overwrite and create workflow-1.md
-    await workflowCommand({ name: 'planning-only', format: 'markdown', reportDir, dedupe: true } as any);
+    await workflowCommand({ name: 'design-only', format: 'markdown', reportDir, dedupe: true } as any);
 
     const files = fs.readdirSync(reportDir).filter(f => f.endsWith('.md'));
     expect(files.includes('workflow.md')).toBe(true);

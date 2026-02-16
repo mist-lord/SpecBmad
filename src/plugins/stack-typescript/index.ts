@@ -48,7 +48,7 @@ export class TypeScriptStackPlugin extends BaseStackPlugin {
     return script ? `npm run ${script}` : 'npm start';
   }
 
-  getTestCommand(cwd: string): string {
+  getTestCommand(_cwd: string): string {
     return 'npm test';
   }
 }

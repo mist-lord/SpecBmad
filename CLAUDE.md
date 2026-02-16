@@ -81,6 +81,67 @@ Claude                        Codex
 3. 集成测试               ←→  3. 验证测试通过
 ```
 
+## Agent Teams 协作工作流
+
+### 何时使用 Agent Teams
+
+- 复杂多步骤任务（如跨多文件的重构、新功能实现）
+- 需要并行执行的独立子任务
+- 需要多角色协作（如实现 + 评审 + 测试）
+
+### Team 工作流程
+
+1. **创建 Team**: 根据任务拆分为多个 Agent
+2. **分配任务**: 用 TaskList 管理，每个 Agent 认领任务
+3. **并行执行**: 独立任务并行推进，依赖任务按序执行
+4. **Codex 评审**: 所有代码变更完成后，必须触发 Codex 评审
+5. **修复问题**: 根据评审结果修复 CRITICAL/HIGH 问题
+6. **测试验证**: 确保所有测试通过后才算完成
+
+### 任务完成标准 (Definition of Done)
+
+任何代码变更任务，必须满足以下全部条件才算完成：
+
+1. **代码实现完成** — 所有功能已实现
+2. **Codex 评审通过** — 无 CRITICAL/HIGH 问题
+   ```bash
+   npx ts-node tools/scripts/auto-review.ts <changed-files>
+   ```
+3. **测试通过** — 所有测试 PASS
+   ```bash
+   pnpm test
+   ```
+4. **类型检查通过**
+   ```bash
+   pnpm type-check
+   ```
+5. **Lint 通过**
+   ```bash
+   pnpm lint
+   ```
+
+### Agent 角色分配参考
+
+| 角色 | subagent_type | 职责 |
+|------|--------------|------|
+| 实现者 | general-purpose | 编写核心代码 |
+| 测试者 | tdd-guide | 编写测试、验证覆盖率 |
+| 评审者 | code-reviewer / go-reviewer | 代码质量检查 |
+| 安全评审 | security-reviewer | 安全漏洞检测 |
+| 架构师 | architect | 架构设计、技术决策 |
+
+### 完成流程 Checklist
+
+```
+实现代码 → Codex评审 → 修复问题 → 重新评审(如有CRITICAL/HIGH)
+    ↓                                        ↓
+测试通过 ← ← ← ← ← ← ← ← ← ← ← ← ← ← ←┘
+    ↓
+type-check + lint 通过
+    ↓
+✅ 任务完成
+```
+
 ## 上下文接力工作流
 
 ### 触发时机
@@ -306,8 +367,8 @@ Summary: 0 CRITICAL, 1 HIGH, 1 MEDIUM, 0 LOW
 
 ### 目标与策略
 
-**项目目标**: 从39%提升到80%覆盖率
-**策略**: 优先高价值低成本模块（Commands 4.2%, Plugins 0%）
+**项目目标**: 从58%提升到80%覆盖率（当前 58.21%, 914 测试）
+**策略**: 优先低覆盖率模块（workflow 34%, project 7%, prompt 27%, plugin-manager 43%）
 
 ### 测试工具库设计
 

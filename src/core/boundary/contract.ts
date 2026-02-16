@@ -258,6 +258,18 @@ export class ContractLoader implements IContractLoader {
         input_schema: 'CodeArtifacts',
         output_schema: 'ReviewReport',
       },
+      {
+        name: 'SecurityExpert',
+        scope: {
+          read: ['src/**', 'tests/**', 'config/**', 'spec/**', 'docs/**'],
+          write: ['docs/security/**', 'docs/review/**'],
+          forbidden: ['需求分析', '架构设计', '代码编写'],
+        },
+        allowed_tools: ['Read', 'Glob', 'Grep', 'Write'],
+        allowed_paths: ['./src/**', './tests/**', './config/**', './spec/**', './docs/**'],
+        input_schema: 'CodeArtifacts',
+        output_schema: 'SecurityReport',
+      },
     ];
 
     for (const contract of defaultContracts) {

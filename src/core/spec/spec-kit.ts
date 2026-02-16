@@ -1,23 +1,24 @@
 /**
- * Spec-Kit 集成 (Phase 0)
- * 
- * 调用 Spec-Kit Python 脚本
- * 输入：自然语言需求
- * 输出：/spec/intent.yaml
+ * Spec-Kit - 需求捕获 (Phase 0: Capture)
+ *
+ * 4-Phase MVP 定位：
+ * - 输入：自然语言需求
+ * - 输出：intent.yaml (结构化需求)
+ * - 不依赖 Python，纯 TypeScript 实现
+ *
+ * 注意：这不是"形式化规范"，而是 LLM 辅助的需求结构化输出
  */
 
-import { pythonBridge, PythonBridgeResult } from '../bridge/python';
 import { log } from '@/utils/logger';
 import { getSpecPath } from '@/utils/paths';
 import fs from 'fs';
 import path from 'path';
-import { IntentSpec } from './schema';
+import { IntentSpec, Requirement } from './schema';
 import yaml from 'yaml';
 
 export interface SpecKitOptions {
   input: string; // 自然语言需求
   outputPath?: string; // 输出路径，默认 /spec/intent.yaml
-  specKitScriptPath?: string; // Spec-Kit Python 脚本路径
 }
 
 export interface SpecKitResult {
@@ -29,105 +30,28 @@ export interface SpecKitResult {
 
 export class SpecKitIntegration {
   /**
-   * 执行 Spec-Kit（Phase 0）
+   * 执行需求捕获 (Phase 0: Capture)
+   *
+   * 将自然语言需求转换为结构化的 intent.yaml
    */
   async execute(options: SpecKitOptions): Promise<SpecKitResult> {
     const outputPath = options.outputPath || getSpecPath('intent.yaml');
-    const specKitScriptPath = options.specKitScriptPath || this.getDefaultSpecKitPath();
 
-    log.info(`执行 Spec-Kit (Phase 0): ${options.input.substring(0, 50)}...`);
+    log.info(`执行需求捕获 (Phase 0): ${options.input.substring(0, 50)}...`);
 
     // 确保输出目录存在
     const outputDir = path.dirname(outputPath);
     fs.mkdirSync(outputDir, { recursive: true });
 
-    // 如果 Spec-Kit 脚本不存在，使用 Mock 实现
-    if (!fs.existsSync(specKitScriptPath)) {
-      log.warn(`Spec-Kit 脚本不存在: ${specKitScriptPath}，使用 Mock 实现`);
-      return this.mockSpecKit(options.input, outputPath);
-    }
-
     try {
-      // 创建临时输入文件
-      const tempInputFile = path.join(outputDir, '.spec-kit-input.txt');
-      fs.writeFileSync(tempInputFile, options.input, 'utf-8');
+      // 解析需求为结构化格式
+      const intentSpec = this.parseRequirements(options.input);
 
-      // 调用 Spec-Kit Python 脚本
-      const result = await pythonBridge.execute({
-        scriptPath: specKitScriptPath,
-        args: ['--input', tempInputFile, '--output', outputPath],
-        cwd: process.cwd(),
-        timeout: 60000 // 60秒超时
-      });
-
-      // 清理临时文件
-      if (fs.existsSync(tempInputFile)) {
-        fs.unlinkSync(tempInputFile);
-      }
-
-      if (!result.success) {
-        return {
-          success: false,
-          outputPath,
-          error: result.error || result.stderr || 'Spec-Kit 执行失败'
-        };
-      }
-
-      // 读取生成的 intent.yaml
-      let intentSpec: IntentSpec | undefined;
-      if (fs.existsSync(outputPath)) {
-        try {
-          const content = fs.readFileSync(outputPath, 'utf-8');
-          intentSpec = yaml.parse(content) as IntentSpec;
-        } catch (error) {
-          log.warn(`解析 intent.yaml 失败: ${error instanceof Error ? error.message : String(error)}`);
-        }
-      }
-
-      log.success(`Spec-Kit 执行成功，输出: ${outputPath}`);
-      return {
-        success: true,
-        intentSpec,
-        outputPath
-      };
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      log.error(`Spec-Kit 执行异常: ${msg}`);
-      return {
-        success: false,
-        outputPath,
-        error: msg
-      };
-    }
-  }
-
-  /**
-   * Mock 实现（当 Spec-Kit Python 脚本不可用时）
-   */
-  private mockSpecKit(input: string, outputPath: string): SpecKitResult {
-    log.info('使用 Mock Spec-Kit 实现');
-
-    const intentSpec: IntentSpec = {
-      schema_version: 1,
-      title: '需求规格',
-      description: input,
-      requirements: [
-        {
-          id: 'REQ-001',
-          description: input,
-          priority: 'high'
-        }
-      ],
-      metadata: {
-        generated_by: 'mock-spec-kit',
-        timestamp: new Date().toISOString()
-      }
-    };
-
-    try {
+      // 写入 YAML 文件
       const content = yaml.stringify(intentSpec);
       fs.writeFileSync(outputPath, content, 'utf-8');
-      log.success(`Mock Spec-Kit 输出: ${outputPath}`);
+
+      log.success(`需求捕获完成，输出: ${outputPath}`);
       return {
         success: true,
         intentSpec,
@@ -135,6 +59,7 @@ export class SpecKitIntegration {
       };
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
+      log.error(`需求捕获失败: ${msg}`);
       return {
         success: false,
         outputPath,
@@ -144,14 +69,67 @@ export class SpecKitIntegration {
   }
 
   /**
-   * 获取默认 Spec-Kit 脚本路径
+   * 解析自然语言需求为结构化格式
+   *
+   * 简单实现：将输入拆分为多个需求项
+   * 未来可以接入 LLM 进行更智能的解析
    */
-  private getDefaultSpecKitPath(): string {
-    // 默认路径：项目根目录下的 tools/spec-kit/specify.py
-    // 或者可以从环境变量/配置中读取
-    return path.join(process.cwd(), 'tools', 'spec-kit', 'specify.py');
+  private parseRequirements(input: string): IntentSpec {
+    const requirements: Requirement[] = [];
+
+    // 简单的需求拆分逻辑
+    // 1. 按换行或句号拆分
+    // 2. 过滤空行
+    // 3. 为每条生成 REQ-ID
+    const lines = input
+      .split(/[。\n]/)
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+
+    if (lines.length === 0) {
+      // 如果没有拆分出多条，整体作为一条需求
+      requirements.push({
+        id: 'REQ-001',
+        description: input.trim(),
+        priority: 'high'
+      });
+    } else {
+      lines.forEach((line, index) => {
+        requirements.push({
+          id: `REQ-${String(index + 1).padStart(3, '0')}`,
+          description: line,
+          priority: index === 0 ? 'high' : 'medium'
+        });
+      });
+    }
+
+    // 提取标题（第一句话或前 50 字符）
+    const title = this.extractTitle(input);
+
+    return {
+      schema_version: 1,
+      title,
+      description: input,
+      requirements,
+      metadata: {
+        generated_by: 'spec-kit',
+        timestamp: new Date().toISOString(),
+        phase: 0
+      }
+    };
+  }
+
+  /**
+   * 从输入中提取标题
+   */
+  private extractTitle(input: string): string {
+    // 取第一行或前 50 字符
+    const firstLine = input.split(/[。\n]/)[0]?.trim() || input.trim();
+    if (firstLine.length > 50) {
+      return firstLine.substring(0, 47) + '...';
+    }
+    return firstLine || '需求规格';
   }
 }
 
 export const specKit = new SpecKitIntegration();
-
