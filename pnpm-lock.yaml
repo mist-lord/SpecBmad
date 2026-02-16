@@ -12,8 +12,8 @@ importers:
         specifier: ^2.2.0
         version: 2.2.2
       chalk:
-        specifier: ^5.3.0
-        version: 5.6.2
+        specifier: ^4.1.2
+        version: 4.1.2
       child_process:
         specifier: ^1.0.2
         version: 1.0.2
