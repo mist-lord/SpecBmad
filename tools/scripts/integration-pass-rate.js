@@ -5,7 +5,7 @@
 
 const path = require('path');
 const fs = require('fs');
-const { execaSync } = require('execa');
+const { spawnSync } = require('child_process');
 
 function ensureDir(p) {
   if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true });
@@ -32,6 +32,17 @@ function appendMarkdown(mdPath, sectionTitle, lines) {
   fs.appendFileSync(mdPath, arr.join('\n') + '\n');
 }
 
+function runOrExit(cmd, args, options = {}) {
+  const r = spawnSync(cmd, args, options);
+  if (r.error) {
+    console.error(`[integration] Failed to start command: ${cmd}`, r.error.message || String(r.error));
+    process.exit(1);
+  }
+  if (typeof r.status === 'number' && r.status !== 0) {
+    process.exit(r.status || 1);
+  }
+}
+
 function main() {
   const projectRoot = process.cwd();
   const bmadDir = path.join(projectRoot, '.bmad');
@@ -41,7 +52,7 @@ function main() {
   // Run Jest for integration tests only and output JSON
   const pattern = 'tests/(workflow|orchestrator).*\\.test\\.ts';
   console.log('[integration] Running Jest for pattern:', pattern);
-  execaSync('npm', ['run', 'test', '--', '--testPathPattern', pattern, '--json', '--outputFile', outFile], {
+  runOrExit('npm', ['run', 'test', '--', '--testPathPattern', pattern, '--json', '--outputFile', outFile], {
     stdio: 'inherit',
     env: { ...process.env, BMAD_MOCK_LLM: '1' }
   });
