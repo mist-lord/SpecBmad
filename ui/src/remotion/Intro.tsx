@@ -68,7 +68,6 @@ const TitleScene: React.FC<{ start: number }> = ({ start }) => {
 
 const HighlightsScene: React.FC<{ start: number }> = ({ start }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
   const t = Math.max(0, frame - start);
   const titleOpacity = interpolate(t, [0, 16], [0, 1], { extrapolateRight: 'clamp' });
 
