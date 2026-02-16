@@ -1,3 +1,5 @@
+export {};
+
 const mockFs = {
   existsSync: jest.fn(),
   readFileSync: jest.fn(),

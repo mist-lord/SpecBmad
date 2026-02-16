@@ -1,3 +1,5 @@
+export {};
+
 const mockChalk = {
   cyan: (s: string) => s,
   yellow: (s: string) => s,

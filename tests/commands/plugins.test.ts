@@ -1,3 +1,5 @@
+export {};
+
 const mockLog = {
   info: jest.fn(),
   error: jest.fn(),
