@@ -9,7 +9,7 @@
   "scripts": {
     "build": "pnpm run build:ts && pnpm run build:ui",
     "build:ts": "tsc",
-    "build:ui": "pnpm -C ui install --frozen-lockfile --ignore-workspace && pnpm -C ui run build && mkdir -p dist/ui && cp -r ui/dist/* dist/ui",
+    "build:ui": "pnpm -C ui install --no-frozen-lockfile --ignore-workspace && pnpm -C ui run build && mkdir -p dist/ui && cp -r ui/dist/* dist/ui",
     "dev": "ts-node src/index.ts",
     "start": "node dist/index.js",
     "pretest": "pnpm run build:ts",
@@ -23,7 +23,7 @@
     "lint:gate": "eslint src/**/*.ts --max-warnings=0",
     "type-check": "tsc --noEmit",
     "clean": "rimraf dist",
-    "prepare": "pnpm run build",
+    "prepare": "node -e \"process.exit(process.env.CI ? 0 : 1)\" || pnpm run build",
     "benchmark:workflow": "pnpm run build && BMAD_MOCK_LLM=1 node tools/scripts/benchmark-workflow.js --name full-development --runs 3",
     "report:kpi": "node tools/scripts/kpi-report.js",
     "report:integration": "node tools/scripts/integration-pass-rate.js",
