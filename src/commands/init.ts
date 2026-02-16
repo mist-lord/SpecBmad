@@ -4,7 +4,6 @@ import { ConfigManager } from '@/utils/config';
 import { validateInitArgs } from '@/utils/args-validator';
 import { PerfTracer } from '@/utils/perf';
 import { handleError } from '@/utils/error';
-import { runInitWizard } from './init-wizard';
 import { generateByStack } from '@/generator';
 import path from 'path';
 
@@ -25,6 +24,7 @@ export async function initCommand(projectName: string | undefined, options: Init
 
     // 如果指定了 --wizard 或没有提供任何参数，进入向导模式
     if (options.wizard || (!projectName && !options.interactive)) {
+      const { runInitWizard } = await import('./init-wizard');
       const wizardResult = await runInitWizard(projectName);
       
       // 应用向导结果
