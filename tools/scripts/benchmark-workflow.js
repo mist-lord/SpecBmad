@@ -25,7 +25,7 @@ try {
   const prev = configInstance.get('spec_kit') || {};
   configInstance.set('spec_kit', { ...prev, enabled: true, ai_agent: 'Mock' });
 } catch {}
-const { Orchestrator } = require(path.join(distRoot, 'workflow/orchestrator'));
+const { Orchestrator } = require(path.join(distRoot, 'core/workflow/orchestrator'));
 
 function parseArgs(argv) {
   const args = { name: 'full-development', runs: 3 };
