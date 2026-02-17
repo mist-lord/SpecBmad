@@ -10,7 +10,8 @@ const { performance } = require('perf_hooks');
 // Register module alias for compiled dist '@' references
 require('module-alias/register');
 const { addAlias } = require('module-alias');
-addAlias('@', path.join(__dirname, '../dist'));
+const distRoot = path.join(__dirname, '../../dist');
+addAlias('@', distRoot);
 
 // Prefer mock LLM to avoid network costs
 if (!process.env.BMAD_MOCK_LLM) {
@@ -18,13 +19,13 @@ if (!process.env.BMAD_MOCK_LLM) {
 }
 
 // Lazy import after alias setup
-const { config: configInstance } = require('../dist/utils/config');
+const { config: configInstance } = require(path.join(distRoot, 'utils/config'));
 // Force default AI agent to Mock for offline benchmark
 try {
   const prev = configInstance.get('spec_kit') || {};
   configInstance.set('spec_kit', { ...prev, enabled: true, ai_agent: 'Mock' });
 } catch {}
-const { Orchestrator } = require('../dist/workflow/orchestrator');
+const { Orchestrator } = require(path.join(distRoot, 'core/workflow/orchestrator'));
 
 function parseArgs(argv) {
   const args = { name: 'full-development', runs: 3 };

@@ -1,7 +1,7 @@
 # SpecKit-BMAD 文档索引
 
 - 核心文档
-  - `../ARCHITECTURE.md` — 系统架构与模块化设计
+  - `ARCHITECTURE.md` — 系统架构与模块化设计
   - `../README.md` — 快速开始与 CLI 使用指南
 
 - 架构与设计

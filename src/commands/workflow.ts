@@ -4,17 +4,14 @@ import fs from 'fs';
 import yaml from 'yaml';
 import { Orchestrator } from '@/core/workflow/orchestrator';
 import { config } from '@/utils/config';
-<<<<<<< HEAD
-import { PATHS, getProjectPath, getArtifactsPath } from '@/utils/paths';
-=======
 import { PATHS, getProjectPath } from '@/utils/paths';
->>>>>>> origin/main
 import { AgentContext, AgentResult } from '@/types';
 import { renderWorkflowMarkdownSummary } from '../utils/summary';
 import { renderLlmUsageDashboard } from '@/utils/dashboard';
 import { PerfTracer } from '@/utils/perf';
 import { handleError } from '@/utils/error';
 import { pluginManager } from '@/core/plugin/manager';
+import { PhaseNumber } from '@/core/phase/types';
 import { specifyCommand } from './specify';
 import { tasksCommand } from './tasks';
 import { implementCommand } from './implement';
@@ -22,6 +19,7 @@ import { qaCommand } from './qa';
 import { deployCommand } from './deploy';
 import { generateCommand } from './generate';
 import { runCommand } from './run';
+import { ensureProjectInitialized } from '@/utils/auto-init';
 
 interface WorkflowOptions {
   name?: string;
@@ -34,22 +32,31 @@ interface WorkflowOptions {
   resume?: boolean;
   resumeFile?: string;
   autoRun?: boolean;
-  phase?: boolean; // V2 架构：使用 Phase 驱动的工作流
-  startPhase?: number; // 起始 Phase (0-5)
-  endPhase?: number; // 结束 Phase (0-5)
+  phase?: boolean; // 4-Phase MVP：使用 Phase 驱动的工作流
+  startPhase?: number; // 起始 Phase (0-3)
+  endPhase?: number; // 结束 Phase (0-3)
 }
 
 export async function workflowCommand(options: WorkflowOptions): Promise<void> {
   try {
     // V2 架构：Phase 驱动的工作流
     if (options.phase) {
-      const { ensureProjectInitialized } = await import('@/utils/auto-init');
       await ensureProjectInitialized(true);
       config.load();
 
       const orchestrator = new Orchestrator();
-      const startPhase = (options.startPhase ?? 0) as 0 | 1 | 2 | 3 | 4 | 5;
-      const endPhase = (options.endPhase ?? 5) as 0 | 1 | 2 | 3 | 4 | 5;
+      const normalizePhase = (value: number | undefined, fallback: PhaseNumber, label: string): PhaseNumber => {
+        if (value === undefined) {
+          return fallback;
+        }
+        const normalized = Math.trunc(value);
+        if (![0, 1, 2, 3].includes(normalized)) {
+          throw new Error(`${label} 只能是 0-3`);
+        }
+        return normalized as PhaseNumber;
+      };
+      const startPhase = normalizePhase(options.startPhase, 0, 'startPhase');
+      const endPhase = normalizePhase(options.endPhase, 3, 'endPhase');
 
       const initialContext: AgentContext = {
         workingDirectory: process.cwd(),
@@ -87,7 +94,6 @@ export async function workflowCommand(options: WorkflowOptions): Promise<void> {
     }
 
     // 自动初始化（如果需要）
-    const { ensureProjectInitialized } = await import('@/utils/auto-init');
     await ensureProjectInitialized(true); // 静默模式
     
     // 初始化配置
@@ -216,13 +222,6 @@ export async function workflowCommand(options: WorkflowOptions): Promise<void> {
     const artifactsDir = options.reportDir || (options.runDir ? path.join(runRoot, 'artifacts') : getProjectPath(PATHS.ARTIFACTS_DIR));
     const codeDir = options.runDir ? path.join(runRoot, 'code') : path.join(process.cwd(), 'generated', 'project');
     const docsDir = options.runDir ? path.join(runRoot, 'docs') : path.join(process.cwd(), 'docs');
-<<<<<<< HEAD
-    const logsDir = options.runDir ? path.join(runRoot, 'logs') : path.join(process.cwd(), 'docs');
-    const logFile = path.join(logsDir, 'run-output.txt');
-=======
-    // const logsDir = options.runDir ? path.join(runRoot, 'logs') : path.join(process.cwd(), 'docs');
-    // const logFile = path.join(logsDir, 'run-output.txt');
->>>>>>> origin/main
 
     const context: AgentContext = {
       projectState: {

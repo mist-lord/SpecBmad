@@ -1,0 +1,163 @@
+# Agent Contract Configuration
+# @see ADR-ARCH-004-boundary-driven-architecture.md v2.1
+$schema: "https://specbmad.dev/schemas/agent-contracts/v1.0.0"
+version: "1.0.0"
+
+# Agent Permission Contracts
+# Each agent has defined scope, tools, and paths they can access
+agents:
+  Analyst:
+    scope:
+      read:
+        - intent.yaml
+        - user_stories.md
+        - requirements/**
+      write:
+        - requirements.yaml
+        - spec.md
+        - analysis/**
+      forbidden:
+        - 架构设计
+        - 代码编写
+        - 测试执行
+    allowed_tools:
+      - Read
+      - Glob
+      - Grep
+      - Write
+    allowed_paths:
+      - "./spec/**"
+      - "./docs/**"
+      - "./requirements/**"
+    input_schema: IntentSpec
+    output_schema: RequirementsSpec
+
+  Architect:
+    scope:
+      read:
+        - requirements.yaml
+        - spec.md
+        - architecture/**
+      write:
+        - architecture.md
+        - design/**
+        - plan.yaml
+      forbidden:
+        - 需求分析
+        - 代码编写
+        - 测试执行
+    allowed_tools:
+      - Read
+      - Glob
+      - Grep
+      - Write
+    allowed_paths:
+      - "./spec/**"
+      - "./docs/**"
+      - "./design/**"
+      - "./architecture/**"
+    input_schema: RequirementsSpec
+    output_schema: DesignSpec
+
+  Developer:
+    scope:
+      read:
+        - architecture.md
+        - plan.yaml
+        - design/**
+      write:
+        - "src/**"
+        - "tests/**"
+        - "config/**"
+      forbidden:
+        - 需求分析
+        - 架构设计
+    allowed_tools:
+      - Read
+      - Glob
+      - Grep
+      - Write
+      - Edit
+      - Bash
+    allowed_paths:
+      - "./src/**"
+      - "./tests/**"
+      - "./config/**"
+      - "./package.json"
+      - "./tsconfig.json"
+    input_schema: DesignSpec
+    output_schema: CodeArtifacts
+
+  QA:
+    scope:
+      read:
+        - spec.md
+        - requirements.yaml
+        - "src/**"
+        - "tests/**"
+      write:
+        - "docs/review/**"
+        - "tests/reports/**"
+      forbidden:
+        - 需求分析
+        - 架构设计
+        - 代码编写
+    allowed_tools:
+      - Read
+      - Glob
+      - Grep
+      - Write
+    allowed_paths:
+      - "./spec/**"
+      - "./src/**"
+      - "./tests/**"
+      - "./docs/review/**"
+    input_schema: CodeArtifacts
+    output_schema: QAReport
+
+  SecurityExpert:
+    scope:
+      read:
+        - "src/**"
+        - "tests/**"
+        - "config/**"
+        - "spec/**"
+        - "docs/**"
+      write:
+        - "docs/security/**"
+        - "docs/review/**"
+      forbidden:
+        - 需求分析
+        - 架构设计
+        - 代码编写
+    allowed_tools:
+      - Read
+      - Glob
+      - Grep
+      - Write
+    allowed_paths:
+      - "./src/**"
+      - "./tests/**"
+      - "./config/**"
+      - "./spec/**"
+      - "./docs/**"
+    input_schema: CodeArtifacts
+    output_schema: SecurityReport
+
+# Circuit Breaker Configuration
+circuit_breaker:
+  failure_threshold: 5
+  reset_timeout_ms: 30000
+  half_open_max_attempts: 3
+
+# Safe Mode Tools (allowed when circuit is open)
+safe_mode_tools:
+  - Read
+  - Glob
+  - Grep
+
+# Spec Protected Paths (write operations blocked)
+spec_protected_paths:
+  - "./spec/"
+  - "./requirements/"
+  - "./.specbmad/artifacts/"

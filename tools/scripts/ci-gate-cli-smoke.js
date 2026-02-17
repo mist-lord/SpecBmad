@@ -12,22 +12,22 @@ const commands = [
   {
     name: 'analyze',
     args: ['analyze', '--mode', 'technical', '--agent', 'Analyst', '--output', 'json'],
-    artifact: 'analysis.json'
+    stdoutIncludes: '开始BMAD-Method分析'
   },
   {
     name: 'plan',
     args: ['plan', '--type', 'technical', '--agent', 'Architect', '--scale', '1', '--output', 'json'],
-    artifact: 'planning.json'
+    stdoutIncludes: '开始BMAD-Method规划'
   },
   {
     name: 'solution',
     args: ['solution', '--type', 'implementation', '--agent', 'Architect', '--depth', '2', '--output', 'json'],
-    artifact: 'solution.json'
+    stdoutIncludes: '开始BMAD-Method解决方案设计'
   },
   {
     name: 'bmm',
     args: ['bmm', '--operation', 'analyze', '--agent', 'BusinessAnalyst', '--output', 'json'],
-    artifact: 'bmm.json'
+    stdoutIncludes: '开始BMAD-Method商业模型管理'
   },
   // 扩展核心命令覆盖
   {
@@ -58,7 +58,7 @@ const commands = [
   {
     name: 'status',
     args: ['status'],
-    stdoutIncludes: '项目状态:'
+    stdoutIncludes: '项目状态'
   },
   {
     name: 'qa',

@@ -1,0 +1,84 @@
+jest.mock('@/utils/logger', () => ({
+  log: { info: jest.fn(), error: jest.fn(), debug: jest.fn(), warn: jest.fn(), success: jest.fn() },
+}));
+
+jest.mock('@/utils/config', () => ({
+  config: {
+    load: jest.fn().mockReturnValue({}),
+  },
+}));
+
+// Mock child_process to prevent actual Python execution
+jest.mock('child_process', () => ({
+  spawn: jest.fn().mockReturnValue({
+    on: jest.fn((event: string, cb: (...args: any[]) => void) => {
+      if (event === 'close') setTimeout(() => cb(0), 0);
+    }),
+  }),
+  spawnSync: jest.fn().mockReturnValue({ status: 0, error: null }),
+}));
+
+import { bmmCommand } from '@/commands/bmm';
+
+describe('bmmCommand', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    bmmCommand.exitOverride();
+  });
+
+  it('should be a Command instance', () => {
+    expect(bmmCommand).toBeDefined();
+    expect(bmmCommand.name()).toBe('bmm');
+  });
+
+  it('should have expected options', () => {
+    const optionNames = bmmCommand.options.map(o => o.long);
+    expect(optionNames).toContain('--operation');
+    expect(optionNames).toContain('--agent');
+    expect(optionNames).toContain('--output');
+    expect(optionNames).toContain('--verbose');
+  });
+
+  it('should have default operation value of analyze', () => {
+    const opOption = bmmCommand.options.find(o => o.long === '--operation');
+    expect(opOption?.defaultValue).toBe('analyze');
+  });
+
+  it('should have default agent value of BusinessAnalyst', () => {
+    const agentOption = bmmCommand.options.find(o => o.long === '--agent');
+    expect(agentOption?.defaultValue).toBe('BusinessAnalyst');
+  });
+
+  it('should warn when bmad_method is not enabled', async () => {
+    const { config } = require('@/utils/config');
+    config.load.mockReturnValue({ bmad_method: { enabled: false } });
+
+    await bmmCommand.parseAsync(['node', 'test']);
+
+    const { log } = require('@/utils/logger');
+    expect(log.warn).toHaveBeenCalledWith(expect.stringContaining('未启用'));
+  });
+
+  it('should warn when bmad_method is undefined', async () => {
+    const { config } = require('@/utils/config');
+    config.load.mockReturnValue({});
+
+    await bmmCommand.parseAsync(['node', 'test']);
+
+    const { log } = require('@/utils/logger');
+    expect(log.warn).toHaveBeenCalledWith(expect.stringContaining('未启用'));
+  });
+
+  it('should proceed when bmad_method is enabled', async () => {
+    const { config } = require('@/utils/config');
+    config.load.mockReturnValue({ bmad_method: { enabled: true } });
+
+    const { spawn } = require('child_process');
+
+    await bmmCommand.parseAsync(['node', 'test']);
+
+    const { log } = require('@/utils/logger');
+    expect(log.info).toHaveBeenCalledWith(expect.stringContaining('BMM'));
+    expect(spawn).toHaveBeenCalled();
+  });
+});

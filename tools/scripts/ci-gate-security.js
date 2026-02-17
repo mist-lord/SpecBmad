@@ -3,18 +3,16 @@
 // CI Security Gate: fail build if vulnerable dependencies are found
 // Strategy: prefer `npm audit --json`; fallback to `pnpm audit --json`.
 
-const { execaSync } = require('execa');
+const { spawnSync } = require('child_process');
 
 function runAudit(cmd, args) {
-  try {
-    const r = execaSync(cmd, args, { stdio: 'pipe' });
-    return { ok: true, stdout: r.stdout ? String(r.stdout) : '' };
-  } catch (e) {
-    // Some audit commands exit non-zero when vulnerabilities exist; still capture stdout
-    const stdout = e.stdout ? String(e.stdout) : '';
-    const stderr = e.stderr ? String(e.stderr) : '';
-    return { ok: false, stdout, stderr };
-  }
+  const r = spawnSync(cmd, args, { encoding: 'utf8' });
+  return {
+    ok: r.status === 0,
+    stdout: r.stdout ? String(r.stdout) : '',
+    stderr: r.stderr ? String(r.stderr) : '',
+    error: r.error || null
+  };
 }
 
 function parseReport(jsonStr) {
@@ -65,10 +63,16 @@ function countSeverities(report) {
 function main() {
   // Prefer npm audit
   let res = runAudit('npm', ['audit', '--json']);
+  if (res.error) {
+    console.warn('[security-gate] npm audit execution error:', res.error.message || String(res.error));
+  }
   let report = parseReport(res.stdout);
   if (!report) {
     // Fallback to pnpm audit
     res = runAudit('pnpm', ['audit', '--json']);
+    if (res.error) {
+      console.warn('[security-gate] pnpm audit execution error:', res.error.message || String(res.error));
+    }
     report = parseReport(res.stdout);
   }
 

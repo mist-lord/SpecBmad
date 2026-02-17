@@ -19,7 +19,7 @@ export function createApp(): Application {
   // 静态文件托管 (生产模式)
   // 假设构建后的前端文件位于 dist/ui
   // 在开发环境中，我们通常会单独运行 Vite Server，不需要这里托管
-  const uiDistPath = path.join(__dirname, '../../ui'); // 调整为 dist/ui
+  const _uiDistPath = path.join(__dirname, '../../ui'); // 调整为 dist/ui
   // 注意：在 TS 编译后，dist/ui/server/app.js -> __dirname 是 dist/ui/server
   // 如果我们将前端构建到 dist/ui，那么路径应该是 ../../ui
   
@@ -30,7 +30,7 @@ export function createApp(): Application {
   // 作为一个简单的 fallback，如果找不到文件，我们可以只提供 API。
 
   // 错误处理
-  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
     log.error(`API Error: ${err.message}`);
     res.status(500).json({ error: err.message || 'Internal Server Error' });
   });

@@ -5,7 +5,7 @@
 
 const path = require('path');
 const fs = require('fs');
-const { execaSync } = require('execa');
+const { spawnSync } = require('child_process');
 
 function tsString(d = new Date()) {
   const pad = (n) => String(n).padStart(2, '0');
@@ -40,9 +40,20 @@ function appendMarkdownReport(mdPath, title, kpi) {
   fs.appendFileSync(mdPath, lines.join('\n') + '\n');
 }
 
+function runOrExit(cmd, args, options = {}) {
+  const r = spawnSync(cmd, args, options);
+  if (r.error) {
+    console.error(`[kpi] Failed to start command: ${cmd}`, r.error.message || String(r.error));
+    process.exit(1);
+  }
+  if (typeof r.status === 'number' && r.status !== 0) {
+    process.exit(r.status || 1);
+  }
+}
+
 function main() {
   // Build dist for benchmark script
-  execaSync('npm', ['run', 'build'], { stdio: 'inherit' });
+  runOrExit('npm', ['run', 'build'], { stdio: 'inherit' });
   // Ensure local project config prefers Mock client to avoid Claude requirement
   const projectConfigDir = path.join(process.cwd(), '.specbmad');
   ensureDir(projectConfigDir);
@@ -61,7 +72,7 @@ function main() {
   }
 
   // Run workflow benchmark
-  execaSync('node', ['scripts/benchmark-workflow.js', '--name', 'full-development', '--runs', '3'], {
+  runOrExit('node', ['scripts/benchmark-workflow.js', '--name', 'full-development', '--runs', '3'], {
     stdio: 'inherit',
     env: { ...process.env, BMAD_MOCK_LLM: '1' }
   });
@@ -76,7 +87,7 @@ function main() {
   const bench = readJSON(benchFile);
 
   // Run coverage
-  execaSync('npm', ['run', 'test:coverage'], { stdio: 'inherit' });
+  runOrExit('npm', ['run', 'test:coverage'], { stdio: 'inherit' });
   const covSummaryFile = path.join(process.cwd(), 'coverage', 'coverage-summary.json');
   let covSummary = null;
   if (fs.existsSync(covSummaryFile)) {

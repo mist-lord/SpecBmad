@@ -8,9 +8,11 @@ export class LLMConcurrencyController {
   private totalRun: number = 0;
   private totalQueued: number = 0;
   private queue: Array<() => void> = [];
+  private latencies: number[] = [];
+  private readonly maxLatencyRecords = 1000;
 
   constructor(limit?: number) {
-    try { projectConfig.load(); } catch {}
+    try { projectConfig.load(); } catch { /* use defaults */ }
     const cfgLimit = projectConfig.get('llmConcurrencyLimit');
     this.limit = typeof cfgLimit === 'number' && cfgLimit > 0 ? cfgLimit : (limit ?? 4);
   }
@@ -19,8 +21,53 @@ export class LLMConcurrencyController {
     if (n > 0) this.limit = n;
   }
 
-  getStats(): { limit: number; active: number; peakActive: number; totalRun: number; totalQueued: number } {
-    return { limit: this.limit, active: this.active, peakActive: this.peakActive, totalRun: this.totalRun, totalQueued: this.totalQueued };
+  getStats(): { limit: number; active: number; peakActive: number; totalRun: number; totalQueued: number; p95Latency: number } {
+    return {
+      limit: this.limit,
+      active: this.active,
+      peakActive: this.peakActive,
+      totalRun: this.totalRun,
+      totalQueued: this.totalQueued,
+      p95Latency: this.getP95Latency()
+    };
+  }
+
+  /**
+   * 记录一次LLM调用的延迟
+   */
+  recordLatency(ms: number): void {
+    this.latencies.push(ms);
+    if (this.latencies.length > this.maxLatencyRecords) {
+      this.latencies.shift();
+    }
+  }
+
+  /**
+   * 获取P95延迟（毫秒）
+   */
+  getP95Latency(): number {
+    if (this.latencies.length === 0) return 0;
+    const sorted = [...this.latencies].sort((a, b) => a - b);
+    const p95Index = Math.floor(sorted.length * 0.95);
+    return sorted[Math.min(p95Index, sorted.length - 1)];
+  }
+
+  /**
+   * 获取延迟统计信息
+   */
+  getLatencyStats(): { count: number; p50: number; p95: number; p99: number; avg: number } {
+    if (this.latencies.length === 0) {
+      return { count: 0, p50: 0, p95: 0, p99: 0, avg: 0 };
+    }
+    const sorted = [...this.latencies].sort((a, b) => a - b);
+    const len = sorted.length;
+    return {
+      count: len,
+      p50: sorted[Math.floor(len * 0.50)],
+      p95: sorted[Math.floor(len * 0.95)],
+      p99: sorted[Math.min(Math.floor(len * 0.99), len - 1)],
+      avg: Math.round(sorted.reduce((a, b) => a + b, 0) / len)
+    };
   }
 
   async run<T>(fn: () => Promise<T>): Promise<T> {
@@ -32,9 +79,10 @@ export class LLMConcurrencyController {
       return result;
     } finally {
       const dur = Date.now() - started;
+      this.recordLatency(dur);
       this.release();
       if (dur > 1000) {
-        log.debug(`LLM并发任务完成，耗时=${dur}ms, active=${this.active}`);
+        log.debug(`LLM并发任务完成，耗时=${dur}ms, active=${this.active}, p95=${this.getP95Latency()}ms`);
       }
     }
   }

@@ -198,14 +198,14 @@ export class ChangeManager {
     if (fs.existsSync(deltasPath)) {
       try {
         proposal.deltas = JSON.parse(fs.readFileSync(deltasPath, 'utf-8'));
-      } catch {}
+      } catch { /* ignore parse errors */ }
     }
     
     const tasksPath = path.join(proposalDir, 'tasks.json');
     if (fs.existsSync(tasksPath)) {
       try {
         proposal.tasks = JSON.parse(fs.readFileSync(tasksPath, 'utf-8'));
-      } catch {}
+      } catch { /* ignore parse errors */ }
     }
 
     return proposal;

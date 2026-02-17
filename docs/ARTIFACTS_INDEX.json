@@ -1,48 +1,23 @@
 {
-<<<<<<< HEAD
-  "generatedAt": "2026-01-11T08:17:14.275Z",
-=======
-  "generatedAt": "2026-01-11T08:56:53.543Z",
->>>>>>> origin/main
+  "generatedAt": "2026-02-16T07:34:10.170Z",
   "files": [
     {
       "name": "boundary",
       "path": "/Users/baijinde/code/SpecBmad/.specbmad/artifacts/boundary",
       "size": 128,
-      "mtime": "2026-01-11T08:15:53.713Z"
+      "mtime": "2026-01-13T23:59:27.201Z"
     },
     {
       "name": "llm-dashboard.md",
       "path": "/Users/baijinde/code/SpecBmad/.specbmad/artifacts/llm-dashboard.md",
-      "size": 561,
-<<<<<<< HEAD
-      "mtime": "2026-01-11T08:17:14.275Z"
-=======
-      "mtime": "2026-01-11T08:56:53.361Z"
->>>>>>> origin/main
+      "size": 594,
+      "mtime": "2026-02-16T07:34:10.101Z"
     },
     {
       "name": "naming",
       "path": "/Users/baijinde/code/SpecBmad/.specbmad/artifacts/naming",
-<<<<<<< HEAD
-      "size": 160,
-      "mtime": "2026-01-11T08:17:14.196Z"
-    },
-    {
-      "name": "workflow-summary-test-1768119434259.md",
-      "path": "/Users/baijinde/code/SpecBmad/.specbmad/artifacts/workflow-summary-test-1768119434259.md",
-      "size": 725,
-      "mtime": "2026-01-11T08:17:14.269Z"
-    },
-    {
-      "name": "workflow-summary-test-1768119434271.json",
-      "path": "/Users/baijinde/code/SpecBmad/.specbmad/artifacts/workflow-summary-test-1768119434271.json",
-      "size": 352,
-      "mtime": "2026-01-11T08:17:14.274Z"
-=======
-      "size": 256,
-      "mtime": "2026-01-11T08:56:53.542Z"
->>>>>>> origin/main
+      "size": 2432,
+      "mtime": "2026-02-16T07:34:10.169Z"
     }
   ]
 }

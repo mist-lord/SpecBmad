@@ -142,7 +142,7 @@ def test_import():
     return 'python main.py';
   }
 
-  getTestCommand(cwd: string): string {
+  getTestCommand(_cwd: string): string {
     return 'pytest';
   }
 }

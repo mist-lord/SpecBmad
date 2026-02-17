@@ -2,7 +2,16 @@ import { Command } from 'commander';
 import { changeManager } from '@/core/change/manager';
 import { log } from '@/utils/logger';
 import chalk from 'chalk';
-import inquirer from 'inquirer';
+
+let inquirerPromise: Promise<typeof import('inquirer')> | null = null;
+
+async function loadInquirer() {
+  if (!inquirerPromise) {
+    inquirerPromise = import('inquirer');
+  }
+  const mod = await inquirerPromise;
+  return mod.default;
+}
 
 export const changeCommand = new Command('change')
   .description('管理规范变更提案');
@@ -41,6 +50,7 @@ changeCommand
   .option('-d, --desc <description>', '提案描述')
   .action(async (options) => {
     let { title, desc } = options;
+    const inquirer = await loadInquirer();
     
     if (!title) {
       const ans = await inquirer.prompt([{
