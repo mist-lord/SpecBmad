@@ -65,17 +65,19 @@ jobs:
         env:
           BMAD_MOCK_LLM: 1
         run: |
-          node dist/index.js workflow --name quick --report-dir .bmad/workflow-smoke --date-prefix --dedupe
+          node dist/index.js workflow --name quick --report-dir .specbmad/workflow-smoke --date-prefix --dedupe
       - name: Gate - require workflow completion
         if: always()
         run: |
-          node -e "const fs=require('fs');const p='.bmad/workflow.state.json';if(!fs.existsSync(p)){console.error('Gate: no state file');process.exit(1)}const j=JSON.parse(fs.readFileSync(p));if(j.status!=='completed'){console.error('Gate: workflow not completed');process.exit(1)}const n=Array.isArray(j.completedSteps)?j.completedSteps.length:0;if(n<1){console.error('Gate: workflow completed with 0 steps');process.exit(1)}console.log('Gate: workflow completed with',n,'steps')"
+          node -e "const fs=require('fs');const candidates=['.specbmad/workflow.state.json','.bmad/workflow.state.json'];const p=candidates.find(x=>fs.existsSync(x));if(!p){console.error('Gate: no state file');process.exit(1)}const j=JSON.parse(fs.readFileSync(p));if(j.status!=='completed'){console.error('Gate: workflow not completed');process.exit(1)}const n=Array.isArray(j.completedSteps)?j.completedSteps.length:0;if(n<1){console.error('Gate: workflow completed with 0 steps');process.exit(1)}console.log('Gate: workflow completed with',n,'steps from',p)"
       - name: Upload workflow artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: bmad-workflow-artifacts
-          path: .bmad
+          path: |
+            .specbmad
+            .bmad
 
   python:
     name: Python bridge smoke test
