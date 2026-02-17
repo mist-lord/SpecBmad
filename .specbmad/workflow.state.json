@@ -1,27 +1,27 @@
 {
-  "workflow": "planning-only",
-  "currentStep": "story-refine",
+  "workflow": "design-only",
+  "currentStep": "design",
   "completedSteps": [
-    "sprint-plan",
-    "story-refine"
+    "capture",
+    "design"
   ],
   "status": "completed",
-  "updatedAt": "2026-01-11T08:56:53.894Z",
+  "updatedAt": "2026-02-16T07:34:11.977Z",
   "resourceSamples": [
     {
-      "ts": "2026-01-11T08:56:53.893Z",
+      "ts": "2026-02-16T07:34:11.975Z",
       "phase": "persist",
-      "stepId": "sprint-plan",
+      "stepId": "capture",
       "memory": {
-        "rss": 483053568,
-        "heapTotal": 357871616,
-        "heapUsed": 270635488,
-        "external": 8965721,
-        "arrayBuffers": 5365889
+        "rss": 600993792,
+        "heapTotal": 411234304,
+        "heapUsed": 235929544,
+        "external": 8837769,
+        "arrayBuffers": 4981155
       },
       "cpu": {
-        "user": 5870945,
-        "system": 776375
+        "user": 7407781,
+        "system": 1571070
       },
       "gc": {
         "count": 0,
@@ -30,19 +30,19 @@
       }
     },
     {
-      "ts": "2026-01-11T08:56:53.894Z",
+      "ts": "2026-02-16T07:34:11.977Z",
       "phase": "persist",
-      "stepId": "story-refine",
+      "stepId": "design",
       "memory": {
-        "rss": 483061760,
-        "heapTotal": 357871616,
-        "heapUsed": 270707336,
-        "external": 8965721,
-        "arrayBuffers": 5365889
+        "rss": 600993792,
+        "heapTotal": 411234304,
+        "heapUsed": 236011272,
+        "external": 8837769,
+        "arrayBuffers": 4981155
       },
       "cpu": {
-        "user": 5871490,
-        "system": 776680
+        "user": 7408610,
+        "system": 1571488
       },
       "gc": {
         "count": 0,
@@ -51,19 +51,19 @@
       }
     },
     {
-      "ts": "2026-01-11T08:56:53.894Z",
+      "ts": "2026-02-16T07:34:11.977Z",
       "phase": "persist",
-      "stepId": "story-refine",
+      "stepId": "design",
       "memory": {
-        "rss": 483061760,
-        "heapTotal": 357871616,
-        "heapUsed": 270715840,
-        "external": 8965721,
-        "arrayBuffers": 5365889
+        "rss": 600993792,
+        "heapTotal": 411234304,
+        "heapUsed": 236019624,
+        "external": 8837769,
+        "arrayBuffers": 4981155
       },
       "cpu": {
-        "user": 5871602,
-        "system": 776864
+        "user": 7408748,
+        "system": 1571720
       },
       "gc": {
         "count": 0,

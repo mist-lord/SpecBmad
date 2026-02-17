@@ -13,7 +13,7 @@ export class PromptEngine {
   private config = projectConfig;
 
   constructor() {
-    try { this.config.load(); } catch {}
+    try { this.config.load(); } catch { /* use defaults */ }
   }
 
   /**

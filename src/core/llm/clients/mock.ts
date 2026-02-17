@@ -15,7 +15,7 @@ export class MockLLMClient extends BaseLLMClient {
     return true;
   }
 
-  public async generateText(prompt: string, options?: LLMOptions): Promise<string> {
+  public async generateText(prompt: string, _options?: LLMOptions): Promise<string> {
     const p = prompt.toLowerCase();
 
     // 若提示要求严格 JSON，则返回固定结构 JSON

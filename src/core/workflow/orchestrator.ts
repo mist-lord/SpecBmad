@@ -12,8 +12,6 @@ import { EventStore } from '@/core/events/store';
 import { PhaseContext, PhaseNumber } from '@/core/phase/types';
 import { registerDefaultGates } from '@/core/phase/gates';
 import { specKit } from '@/core/spec/spec-kit';
-import { openSpec } from '@/core/spec/openspec';
-import { deepCode } from '@/core/verification/deepcode';
 
 export interface WorkflowStepConfig {
   id: string;
@@ -136,20 +134,22 @@ export class Orchestrator {
   }
 
   /**
-   * V2 架构：Phase 驱动的工作流执行
-   * 
-   * 执行 Phase 0→5 完整流程
-   * 所有 Phase 迁移决策由 Phase Controller 执行
+   * 4-Phase MVP: Phase 驱动的工作流执行
+   *
+   * Phase 0: Capture (需求捕获)
+   * Phase 1: Design (架构设计)
+   * Phase 2: Build (实现)
+   * Phase 3: Review (验收)
    */
-  async executePhaseWorkflow(initialContext: AgentContext, startPhase: PhaseNumber = 0, endPhase: PhaseNumber = 5): Promise<AgentResult[]> {
+  async executePhaseWorkflow(initialContext: AgentContext, startPhase: PhaseNumber = 0, endPhase: PhaseNumber = 3): Promise<AgentResult[]> {
     // 注册默认 Gate 检查器
-    registerDefaultGates();
+    await registerDefaultGates();
 
     const controller = new PhaseController();
     const eventStore = new EventStore();
     const results: AgentResult[] = [];
 
-    log.info(`开始 Phase 驱动工作流: Phase ${startPhase} → ${endPhase}`);
+    log.info(`开始 4-Phase MVP 工作流: Phase ${startPhase} → ${endPhase}`);
 
     // 确保 LLM manager 就绪
     await llmManager.initialize();
@@ -161,14 +161,12 @@ export class Orchestrator {
     // 注册所有内置代理
     registerBuiltInAgents();
 
-    let currentPhase = controller.getCurrentPhase();
+    const currentPhase = controller.getCurrentPhase();
     if (currentPhase < startPhase) {
       log.warn(`当前 Phase ${currentPhase} 小于起始 Phase ${startPhase}，重置为 ${startPhase}`);
-      // 注意：这里不能直接设置 Phase，需要通过迁移
-      // 如果当前 Phase 小于起始 Phase，可能需要先执行前面的 Phase
     }
 
-    // 执行 Phase 0→5 流程
+    // 执行 Phase 0→3 流程
     for (let phase = Math.max(currentPhase, startPhase); phase <= endPhase; phase++) {
       log.info(`执行 Phase ${phase}`);
 
@@ -176,53 +174,44 @@ export class Orchestrator {
         projectRoot: process.cwd(),
         currentPhase: phase as PhaseNumber,
         metadata: {
-          workflow: 'phase-driven',
+          workflow: '4-phase-mvp',
           startPhase,
           endPhase
         }
       };
 
-      // 执行当前 Phase 的任务
       let phaseResult: AgentResult | null = null;
 
       try {
         switch (phase) {
-          case 0:
-            // Phase 0: Intent Capture (Spec-Kit)
+          case 0: {
+            // Phase 0: Capture (需求捕获)
+            log.info('Phase 0: Capture - 需求捕获');
             if (initialContext.inputData?.requirement) {
               const specKitResult = await specKit.execute({
                 input: initialContext.inputData.requirement as string
               });
               if (!specKitResult.success) {
-                throw new Error(`Spec-Kit 执行失败: ${specKitResult.error}`);
+                throw new Error(`需求捕获失败: ${specKitResult.error}`);
               }
               phaseResult = {
                 success: true,
-                output: `Intent Spec 已生成: ${specKitResult.outputPath}`,
-                artifacts: [],
-                nextSteps: [],
+                output: `需求已捕获: ${specKitResult.outputPath}`,
+                artifacts: [specKitResult.outputPath],
+                nextSteps: ['进入架构设计阶段'],
                 metadata: { phase: 0, specKitResult }
               };
+            } else {
+              // 如果没有 requirement，使用 Analyst Agent 分析
+              const analyst = AgentFactory.create('Analyst', client);
+              phaseResult = await analyst.execute(initialContext);
             }
             break;
+          }
 
-          case 1:
-            // Phase 1: Formal Specification (OpenSpec)
-            const openSpecResult = await openSpec.execute();
-            if (!openSpecResult.success) {
-              throw new Error(`OpenSpec 执行失败: ${openSpecResult.error}`);
-            }
-            phaseResult = {
-              success: true,
-              output: `Formal Spec 已生成: ${openSpecResult.outputPath}`,
-              artifacts: [],
-              nextSteps: [],
-              metadata: { phase: 1, openSpecResult }
-            };
-            break;
-
-          case 2:
-            // Phase 2: Architecture & Planning (BMAD PM/Architect)
+          case 1: {
+            // Phase 1: Design (架构设计)
+            log.info('Phase 1: Design - 架构设计');
             const architect = AgentFactory.create('Architect', client);
             const architectContext: AgentContext = {
               ...initialContext,
@@ -233,9 +222,11 @@ export class Orchestrator {
             };
             phaseResult = await architect.execute(architectContext);
             break;
+          }
 
-          case 3:
-            // Phase 3: Implementation (BMAD-DEV + DeepCode)
+          case 2: {
+            // Phase 2: Build (实现)
+            log.info('Phase 2: Build - 代码实现');
             const developer = AgentFactory.create('Developer', client);
             const devContext: AgentContext = {
               ...initialContext,
@@ -245,38 +236,23 @@ export class Orchestrator {
               }
             };
             phaseResult = await developer.execute(devContext);
-
-            // DeepCode 验证
-            const deepCodeResult = await deepCode.execute();
-            if (!deepCodeResult.success) {
-              throw new Error(`DeepCode 验证失败: ${deepCodeResult.error}`);
-            }
             break;
+          }
 
-          case 4:
-            // Phase 4: Verification (OpenSpec + DeepCode)
+          case 3: {
+            // Phase 3: Review (验收)
+            log.info('Phase 3: Review - QA 验收');
             const qa = AgentFactory.create('QA', client);
             const qaContext: AgentContext = {
               ...initialContext,
               inputData: {
                 ...initialContext.inputData,
-                type: 'unit'
+                type: 'integration'
               }
             };
             phaseResult = await qa.execute(qaContext);
             break;
-
-          case 5:
-            // Phase 5: Iteration / Evolution
-            log.info('Phase 5: Iteration / Evolution - 工作流完成');
-            phaseResult = {
-              success: true,
-              output: '工作流完成',
-              artifacts: [],
-              nextSteps: [],
-              metadata: { phase: 5 }
-            };
-            break;
+          }
         }
 
         if (phaseResult) {
@@ -288,7 +264,6 @@ export class Orchestrator {
           const nextPhase = (phase + 1) as PhaseNumber;
           const transitionResult = await controller.transitionTo(nextPhase, phaseContext);
 
-          // 记录事件
           eventStore.appendEvent({
             type: 'phase_transition',
             phase: nextPhase,
@@ -310,7 +285,6 @@ export class Orchestrator {
         const msg = error instanceof Error ? error.message : String(error);
         log.error(`Phase ${phase} 执行失败: ${msg}`);
 
-        // 记录错误事件
         eventStore.appendEvent({
           type: 'error',
           phase,
@@ -323,7 +297,7 @@ export class Orchestrator {
       }
     }
 
-    log.success(`Phase 驱动工作流完成: Phase ${startPhase} → ${endPhase}`);
+    log.success(`4-Phase MVP 工作流完成: Phase ${startPhase} → ${endPhase}`);
     return results;
   }
 
@@ -450,6 +424,11 @@ export class Orchestrator {
     };
   }
 
+  /**
+   * 获取工作流定义
+   *
+   * 4-Phase MVP 简化：只保留核心工作流
+   */
   getWorkflowDefinition(name: string): WorkflowDefinition {
     // 优先从配置读取扩展定义
     try {
@@ -462,126 +441,45 @@ export class Orchestrator {
       // 配置不可用时忽略
     }
 
-    // Minimal built-ins; can be extended later
+    // 4-Phase MVP 核心工作流
     switch (name) {
-      case 'planning-only':
-        return {
-          name,
-          description: 'Scrum 计划与拆解单次运行',
-          steps: [
-            { id: 'sprint-plan', name: 'Sprint Planning', agent: 'ScrumMaster', input: { mode: 'plan' } },
-            { id: 'story-refine', name: 'Story Refinement', agent: 'ScrumMaster', input: { mode: 'refine' } }
-          ]
-        };
+      case 'default':
       case 'full-development':
+        // 完整 4-Phase 流程
         return {
           name,
-          description: '端到端开发流（计划→实施→QA）',
+          description: '完整开发流程 (Capture → Design → Build → Review)',
           steps: [
-            { id: 'sprint-plan', name: 'Sprint Planning', agent: 'ScrumMaster', input: { mode: 'plan' } },
-            { id: 'story-refine', name: 'Story Refinement', agent: 'ScrumMaster', input: { mode: 'refine' } },
-            { id: 'implementation', name: 'Implementation', agent: 'Developer', input: { mode: 'feature' } },
-            { id: 'qa-validation', name: 'QA Validation', agent: 'QA', input: { type: 'e2e' } }
+            { id: 'capture', name: 'Capture', agent: 'Analyst', input: { mode: 'brief' } },
+            { id: 'design', name: 'Design', agent: 'Architect', input: { type: 'technical' } },
+            { id: 'build', name: 'Build', agent: 'Developer', input: { mode: 'feature' } },
+            { id: 'review', name: 'Review', agent: 'QA', input: { type: 'integration' } }
           ]
         };
-      case 'spec-first-full':
+
+      case 'quick':
+        // 快速流程（跳过 Review）
         return {
           name,
-          description: '规范优先端到端流',
+          description: '快速开发流程 (Capture → Design → Build)',
           steps: [
-            { id: 'specify', name: 'Specify', agent: 'Analyst', input: { mode: 'brief' } },
-            { id: 'sprint-plan', name: 'Sprint Planning', agent: 'ScrumMaster', input: { mode: 'plan' } },
-            { id: 'story-refine', name: 'Story Refinement', agent: 'ScrumMaster', input: { mode: 'refine' } },
-            { id: 'implementation', name: 'Implementation', agent: 'Developer', input: { mode: 'feature' } },
-            { id: 'qa-validation', name: 'QA Validation', agent: 'QA', input: { type: 'unit' } }
+            { id: 'capture', name: 'Capture', agent: 'Analyst', input: { mode: 'brief' } },
+            { id: 'design', name: 'Design', agent: 'Architect', input: { type: 'technical' } },
+            { id: 'build', name: 'Build', agent: 'Developer', input: { mode: 'feature' } }
           ]
         };
-      case 'change-management':
+
+      case 'design-only':
+        // 仅设计（Capture → Design）
         return {
           name,
-          description: '基于变更提案的迭代流 (Brownfield)',
+          description: '仅设计流程 (Capture → Design)',
           steps: [
-            { id: 'propose-change', name: 'Draft Proposal', agent: 'Analyst', input: { mode: 'change-proposal' } },
-            { id: 'implement-change', name: 'Implement Change', agent: 'Developer', input: { mode: 'refactor' } },
-            { id: 'qa-verify', name: 'Verify Change', agent: 'QA', input: { type: 'regression' } }
+            { id: 'capture', name: 'Capture', agent: 'Analyst', input: { mode: 'brief' } },
+            { id: 'design', name: 'Design', agent: 'Architect', input: { type: 'technical' } }
           ]
         };
-      case 'bmad-first-full':
-        return {
-          name,
-          description: 'BMAD优先端到端流',
-          steps: [
-            { id: 'analysis', name: 'Analysis', agent: 'Analyst', input: { mode: 'technical' } },
-            { id: 'planning', name: 'Planning', agent: 'Architect', input: { type: 'technical' } },
-            { id: 'sprint-plan', name: 'Sprint Planning', agent: 'ScrumMaster', input: { mode: 'plan' } },
-            { id: 'implementation', name: 'Implementation', agent: 'Developer', input: { mode: 'feature' } },
-            { id: 'qa-validation', name: 'QA Validation', agent: 'QA', input: { type: 'integration' } }
-          ]
-        };
-      case 'level-0':
-        return {
-          name,
-          description: '原型/概念验证最小流程',
-          steps: [
-            { id: 'sprint-plan', name: 'Sprint Planning', agent: 'ScrumMaster', input: { mode: 'plan' } },
-            { id: 'implementation', name: 'Implementation', agent: 'Developer', input: { mode: 'feature' } }
-          ]
-        };
-      case 'level-1':
-        return {
-          name,
-          description: '小型项目流程',
-          steps: [
-            { id: 'sprint-plan', name: 'Sprint Planning', agent: 'ScrumMaster', input: { mode: 'plan' } },
-            { id: 'story-refine', name: 'Story Refinement', agent: 'ScrumMaster', input: { mode: 'refine' } },
-            { id: 'implementation', name: 'Implementation', agent: 'Developer', input: { mode: 'feature' } }
-          ]
-        };
-      case 'level-2':
-        return {
-          name,
-          description: '中型项目流程',
-          steps: [
-            { id: 'sprint-plan', name: 'Sprint Planning', agent: 'ScrumMaster', input: { mode: 'plan' } },
-            { id: 'story-refine', name: 'Story Refinement', agent: 'ScrumMaster', input: { mode: 'refine' } },
-            { id: 'implementation', name: 'Implementation', agent: 'Developer', input: { mode: 'feature' } },
-            { id: 'qa-validation', name: 'QA Validation', agent: 'QA', input: { type: 'unit' } }
-          ]
-        };
-      case 'level-3':
-        return {
-          name,
-          description: '大型项目流程',
-          steps: [
-            { id: 'sprint-plan', name: 'Sprint Planning', agent: 'ScrumMaster', input: { mode: 'plan' } },
-            { id: 'story-refine', name: 'Story Refinement', agent: 'ScrumMaster', input: { mode: 'refine' } },
-            { id: 'implementation', name: 'Implementation', agent: 'Developer', input: { mode: 'feature' } },
-            { id: 'qa-validation', name: 'QA Validation', agent: 'QA', input: { type: 'integration' } }
-          ]
-        };
-      case 'level-4':
-        return {
-          name,
-          description: '企业级项目流程',
-          steps: [
-            { id: 'sprint-plan', name: 'Sprint Planning', agent: 'ScrumMaster', input: { mode: 'plan' } },
-            { id: 'story-refine', name: 'Story Refinement', agent: 'ScrumMaster', input: { mode: 'refine' } },
-            { id: 'implementation', name: 'Implementation', agent: 'Developer', input: { mode: 'feature' } },
-            { id: 'qa-validation', name: 'QA Validation', agent: 'QA', input: { type: 'e2e' } },
-            { id: 'security-audit', name: 'Security Audit', agent: 'QA', input: { type: 'security' } }
-          ]
-        };
-      case 'deep-development':
-        return {
-          name,
-          description: '深度开发模式 (Deep-Reasoning Loop, 借鉴 DeepCode)',
-          steps: [
-            { id: 'research-analysis', name: 'Deep Research', agent: 'Analyst', input: { mode: 'research' } },
-            { id: 'technical-plan', name: 'Architectural Design', agent: 'Architect', input: { type: 'technical' } },
-            { id: 'implementation-loop', name: 'Specialized Implementation', agent: 'Developer', input: { mode: 'feature', specialist: 'algorithm' } },
-            { id: 'qa-deep-verify', name: 'Rigorous Validation', agent: 'QA', input: { type: 'e2e', depth: 'maximum' } }
-          ]
-        };
+
       default:
         return { name, steps: [] };
     }

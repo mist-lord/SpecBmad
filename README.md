@@ -61,5 +61,5 @@ AI 会在完成设计后暂停，询问你是否满意，确认后才会开始�
 ---
 
 ## 🔗 更多资源
-- [架构设计文档](./ARCHITECTURE.md) - 深入了解 Agent 协作机制
-- [CLI 参数精简手册](./CLI_REFINEMENT.md) - 查看所有可用参数
+- [架构设计文档](./docs/ARCHITECTURE.md) - 深入了解 Agent 协作机制
+- [CLI 参数精简手册](./docs/用户使用手册.md) - 查看所有可用参数

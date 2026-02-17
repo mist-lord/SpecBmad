@@ -170,18 +170,18 @@ cd build && ctest --output-on-failure
     this.writeFile(path.join(opts.projectDir, '.gitignore'), gitignore, opts.dryRun);
   }
 
-  getRunCommand(cwd: string, script?: string): string {
+  getRunCommand(cwd: string, _script?: string): string {
     const pkgName = this.toPkgName(path.basename(cwd));
     // 优先查找 src 下的可执行文件（新的结构）
     const binPath = path.join('build', 'src', `${pkgName}_run`);
     return `./${binPath}`;
   }
 
-  getBuildCommand(cwd: string): string {
+  getBuildCommand(_cwd: string): string {
     return 'cmake -B build && cmake --build build';
   }
 
-  getTestCommand(cwd: string): string {
+  getTestCommand(_cwd: string): string {
     return 'cd build && ctest --output-on-failure';
   }
 }
