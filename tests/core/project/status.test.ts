@@ -147,6 +147,29 @@ describe('ProjectStatusManager', () => {
       await expect(manager.getStatus()).rejects.toThrow('Config load failed');
       expect(log.error).toHaveBeenCalled();
     });
+
+    it('should handle getLastActivity JSON parse error gracefully', async () => {
+      mockFs.existsSync.mockImplementation((p: string) => {
+        // .specbmad.json exists → isInitialized = true
+        // statusFile (status.json) exists → triggers getLastActivity read
+        return true;
+      });
+      // readFileSync for statusFile returns invalid JSON → triggers catch in getLastActivity
+      mockFs.readFileSync.mockImplementation((p: string) => {
+        if (typeof p === 'string' && p.includes('status.json')) {
+          return 'not-valid-json{{{';
+        }
+        return '{}';
+      });
+
+      // getStatus should complete successfully; lastActivity falls back to new Date()
+      const status = await manager.getStatus();
+
+      expect(status).toHaveProperty('lastActivity');
+      expect(log.debug).toHaveBeenCalledWith(
+        expect.stringContaining('读取最后活动时间失败')
+      );
+    });
   });
 
   // ---------------------------------------------------------------
@@ -361,6 +384,22 @@ describe('ProjectStatusManager', () => {
       expect(tasks.completed).toBe(0);
       expect(tasks.blocked).toBe(0);
     });
+
+    it('should handle JSON parse error in workflow state file gracefully', async () => {
+      mockFs.existsSync.mockImplementation((p: string) => {
+        if (typeof p === 'string' && p.includes('workflow.state.json')) return true;
+        return false;
+      });
+      mockFs.readFileSync.mockReturnValue('invalid-json{{{');
+
+      // Should not throw - catch block at line 221 handles the error
+      const tasks = await manager.getTasksStatus();
+
+      expect(tasks.total).toBe(0);
+      expect(log.debug).toHaveBeenCalledWith(
+        expect.stringContaining('读取任务状态失败')
+      );
+    });
   });
 
   // ---------------------------------------------------------------
@@ -414,6 +453,44 @@ describe('ProjectStatusManager', () => {
       expect(files.plans).toEqual([]);
       expect(files.implementations).toEqual([]);
       expect(files.tests).toEqual([]);
+    });
+
+    it('should recursively scan outputDir and categorize files', async () => {
+      const outputDir = '/fake/output';
+      mockConfigObj.get.mockImplementation((key: string) => {
+        if (key === 'outputDir') return outputDir;
+        return (mockConfigData as any)[key];
+      });
+
+      mockFs.existsSync.mockImplementation((p: string) => {
+        if (p === outputDir) return true;
+        return false;
+      });
+
+      // First call: top-level with a subdir and files
+      // Second call: inside subdir
+      mockFs.readdirSync
+        .mockReturnValueOnce([
+          { name: 'spec-doc.md', isFile: () => true, isDirectory: () => false },
+          { name: 'plan-v1.md', isFile: () => true, isDirectory: () => false },
+          { name: 'impl-code.ts', isFile: () => true, isDirectory: () => false },
+          { name: 'test-suite.ts', isFile: () => true, isDirectory: () => false },
+          { name: 'subdir', isFile: () => false, isDirectory: () => true },
+        ])
+        .mockReturnValueOnce([
+          { name: 'another-spec.md', isFile: () => true, isDirectory: () => false },
+        ]);
+
+      const files = await manager.getFilesStatus();
+
+      expect(files.specifications.some((f) => f.includes('spec-doc.md'))).toBe(true);
+      expect(files.plans.some((f) => f.includes('plan-v1.md'))).toBe(true);
+      expect(files.implementations.some((f) => f.includes('impl-code.ts'))).toBe(true);
+      expect(files.tests.some((f) => f.includes('test-suite.ts'))).toBe(true);
+      expect(files.specifications.some((f) => f.includes('another-spec.md'))).toBe(true);
+
+      // Reset mock
+      mockConfigObj.get.mockImplementation((key: string) => (mockConfigData as any)[key]);
     });
   });
 

@@ -344,4 +344,110 @@ describe('PhaseCommand', () => {
       );
     });
   });
+
+  describe('Phase history', () => {
+    it('should display empty history message when no events', async () => {
+      const { PhaseController } = require('@/core/phase/controller');
+      const { EventStore } = require('@/core/events/store');
+
+      PhaseController.prototype.getCurrentPhase = jest.fn().mockReturnValue(0);
+      EventStore.prototype.queryEvents = jest.fn().mockReturnValue([]);
+
+      await phaseCommand({ history: true });
+
+      expect(log.info).toHaveBeenCalledWith(expect.stringContaining('Phase 历史'));
+      expect(log.info).toHaveBeenCalledWith(expect.stringContaining('暂无历史记录'));
+    });
+
+    it('should display passed events with checkmark icon', async () => {
+      const { PhaseController } = require('@/core/phase/controller');
+      const { EventStore } = require('@/core/events/store');
+
+      PhaseController.prototype.getCurrentPhase = jest.fn().mockReturnValue(1);
+      EventStore.prototype.queryEvents = jest.fn().mockReturnValue([
+        {
+          type: 'phase_transition',
+          phase: 1,
+          status: 'passed',
+          timestamp: '2026-01-01T00:00:00.000Z',
+          actor: 'test'
+        }
+      ]);
+
+      await phaseCommand({ history: true });
+
+      expect(log.info).toHaveBeenCalledWith(
+        expect.stringContaining('✅')
+      );
+      expect(log.info).toHaveBeenCalledWith(
+        expect.stringContaining('Phase 1')
+      );
+    });
+
+    it('should display failed events with X icon and notes', async () => {
+      const { PhaseController } = require('@/core/phase/controller');
+      const { EventStore } = require('@/core/events/store');
+
+      PhaseController.prototype.getCurrentPhase = jest.fn().mockReturnValue(0);
+      EventStore.prototype.queryEvents = jest.fn().mockReturnValue([
+        {
+          type: 'phase_transition',
+          phase: 1,
+          status: 'failed',
+          timestamp: '2026-01-01T00:00:00.000Z',
+          actor: 'test',
+          notes: 'Gate check failed'
+        }
+      ]);
+
+      await phaseCommand({ history: true });
+
+      expect(log.info).toHaveBeenCalledWith(
+        expect.stringContaining('❌')
+      );
+      expect(log.info).toHaveBeenCalledWith(
+        expect.stringContaining('备注: Gate check failed')
+      );
+    });
+
+    it('should limit history display to last 10 events', async () => {
+      const { PhaseController } = require('@/core/phase/controller');
+      const { EventStore } = require('@/core/events/store');
+
+      PhaseController.prototype.getCurrentPhase = jest.fn().mockReturnValue(3);
+
+      const events = Array.from({ length: 15 }, (_, i) => ({
+        type: 'phase_transition',
+        phase: i % 4,
+        status: 'passed',
+        timestamp: new Date(Date.now() + i * 1000).toISOString(),
+        actor: 'test'
+      }));
+      EventStore.prototype.queryEvents = jest.fn().mockReturnValue(events);
+
+      await phaseCommand({ history: true });
+
+      // Count calls that contain Phase info (excluding the header)
+      const phaseCalls = (log.info as jest.Mock).mock.calls.filter(
+        (call: any[]) => typeof call[0] === 'string' && call[0].includes('Phase ') && call[0].includes('✅')
+      );
+      expect(phaseCalls.length).toBe(10);
+    });
+  });
+
+  describe('registerPhaseCommand', () => {
+    it('should register phase command with correct options', () => {
+      const { Command } = require('commander');
+      const program = new Command();
+      const { registerPhaseCommand } = require('@/commands/phase');
+      registerPhaseCommand(program);
+
+      const phaseCmd = program.commands.find((c: any) => c.name() === 'phase');
+      expect(phaseCmd).toBeDefined();
+      const optionNames = phaseCmd.options.map((o: any) => o.long);
+      expect(optionNames).toContain('--show');
+      expect(optionNames).toContain('--transition');
+      expect(optionNames).toContain('--history');
+    });
+  });
 });

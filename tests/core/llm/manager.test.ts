@@ -315,4 +315,145 @@ describe('LLMManager', () => {
       expect(status).toEqual([]);
     });
   });
+
+  describe('initializeConfiguredClients()', () => {
+    it('should register a Claude client from project config', async () => {
+      const { ConfigManager } = require('@/utils/config');
+      ConfigManager.mockImplementation(() => ({
+        load: jest.fn().mockReturnValue({
+          agents: {
+            'my-claude': { enabled: true, type: 'claude', apiKey: 'sk-test', model: 'claude-3-opus' },
+          },
+        }),
+      }));
+
+      const mgr = new LLMManager();
+      await mgr.initialize();
+
+      const client = LLMClientFactory.get('my-claude');
+      expect(client).toBeDefined();
+      expect(client?.name).toBe('my-claude');
+    });
+
+    it('should register an OpenAI client from project config', async () => {
+      const { ConfigManager } = require('@/utils/config');
+      ConfigManager.mockImplementation(() => ({
+        load: jest.fn().mockReturnValue({
+          agents: {
+            'my-openai': { enabled: true, type: 'openai', apiKey: 'sk-openai-test', model: 'gpt-4o' },
+          },
+        }),
+      }));
+
+      const mgr = new LLMManager();
+      await mgr.initialize();
+
+      const client = LLMClientFactory.get('my-openai');
+      expect(client).toBeDefined();
+      expect(client?.name).toBe('my-openai');
+    });
+
+    it('should register a Mock client from project config', async () => {
+      const { ConfigManager } = require('@/utils/config');
+      ConfigManager.mockImplementation(() => ({
+        load: jest.fn().mockReturnValue({
+          agents: {
+            'my-mock': { enabled: true, type: 'mock' },
+          },
+        }),
+      }));
+
+      const mgr = new LLMManager();
+      await mgr.initialize();
+
+      const client = LLMClientFactory.get('my-mock');
+      expect(client).toBeDefined();
+      expect(client?.name).toBe('my-mock');
+    });
+
+    it('should skip disabled agents', async () => {
+      const { ConfigManager } = require('@/utils/config');
+      ConfigManager.mockImplementation(() => ({
+        load: jest.fn().mockReturnValue({
+          agents: {
+            'disabled-agent': { enabled: false, type: 'claude', apiKey: 'sk-test' },
+          },
+        }),
+      }));
+
+      const mgr = new LLMManager();
+      await mgr.initialize();
+
+      const client = LLMClientFactory.get('disabled-agent');
+      expect(client).toBeUndefined();
+    });
+
+    it('should log warning for unsupported agent type', async () => {
+      const { log } = require('@/utils/logger');
+      const { ConfigManager } = require('@/utils/config');
+      ConfigManager.mockImplementation(() => ({
+        load: jest.fn().mockReturnValue({
+          agents: {
+            'bad-agent': { enabled: true, type: 'unknown-type' },
+          },
+        }),
+      }));
+
+      const mgr = new LLMManager();
+      await mgr.initialize();
+
+      expect(log.warn).toHaveBeenCalledWith(
+        expect.stringContaining('不支持的代理类型')
+      );
+      const client = LLMClientFactory.get('bad-agent');
+      expect(client).toBeUndefined();
+    });
+
+    it('should register multiple agents of different types', async () => {
+      const { ConfigManager } = require('@/utils/config');
+      ConfigManager.mockImplementation(() => ({
+        load: jest.fn().mockReturnValue({
+          agents: {
+            'cfg-claude': { enabled: true, type: 'claude', apiKey: 'sk-c' },
+            'cfg-openai': { enabled: true, type: 'openai', apiKey: 'sk-o' },
+            'cfg-mock': { enabled: true, type: 'mock' },
+          },
+        }),
+      }));
+
+      const mgr = new LLMManager();
+      await mgr.initialize();
+
+      expect(LLMClientFactory.get('cfg-claude')).toBeDefined();
+      expect(LLMClientFactory.get('cfg-openai')).toBeDefined();
+      expect(LLMClientFactory.get('cfg-mock')).toBeDefined();
+    });
+
+    it('should not register duplicate client names', async () => {
+      const { log } = require('@/utils/logger');
+      const { ConfigManager } = require('@/utils/config');
+      ConfigManager.mockImplementation(() => ({
+        load: jest.fn().mockReturnValue({
+          agents: {
+            'my-mock': { enabled: true, type: 'mock' },
+          },
+        }),
+      }));
+
+      // First initialization registers 'my-mock'
+      const mgr1 = new LLMManager();
+      await mgr1.initialize();
+
+      const firstClient = LLMClientFactory.get('my-mock');
+      expect(firstClient).toBeDefined();
+
+      // Second manager also tries to register 'my-mock' but it already exists in the factory
+      const mgr2 = new LLMManager();
+      await mgr2.initialize();
+
+      // The client should still be the same instance (not re-registered)
+      const secondClient = LLMClientFactory.get('my-mock');
+      expect(secondClient).toBe(firstClient);
+    });
+  });
 });

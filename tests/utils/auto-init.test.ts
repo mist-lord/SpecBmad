@@ -248,6 +248,108 @@ describe('auto-init', () => {
         }),
       );
     });
+
+    it('should detect react-native framework and mobile type', async () => {
+      (ProjectStatusManager as jest.Mock).mockImplementation(() => ({
+        isInitialized: jest.fn().mockReturnValue(false),
+      }));
+      fs.writeFileSync(
+        path.join(tmpDir, 'package.json'),
+        JSON.stringify({ dependencies: { react: '^18.0.0', 'react-native': '^0.72.0' } }),
+      );
+
+      await ensureProjectInitialized(true);
+
+      const instance = (ConfigManager as unknown as jest.Mock).mock.results[0].value;
+      expect(instance.save).toHaveBeenCalledWith(
+        expect.objectContaining({ framework: 'react-native', type: 'mobile' }),
+      );
+    });
+
+    it('should detect nuxt framework from vue + nuxt deps', async () => {
+      (ProjectStatusManager as jest.Mock).mockImplementation(() => ({
+        isInitialized: jest.fn().mockReturnValue(false),
+      }));
+      fs.writeFileSync(
+        path.join(tmpDir, 'package.json'),
+        JSON.stringify({ dependencies: { vue: '^3.0.0', nuxt: '^3.0.0' } }),
+      );
+
+      await ensureProjectInitialized(true);
+
+      const instance = (ConfigManager as unknown as jest.Mock).mock.results[0].value;
+      expect(instance.save).toHaveBeenCalledWith(
+        expect.objectContaining({ framework: 'nuxt', type: 'web' }),
+      );
+    });
+
+    it('should detect svelte framework', async () => {
+      (ProjectStatusManager as jest.Mock).mockImplementation(() => ({
+        isInitialized: jest.fn().mockReturnValue(false),
+      }));
+      fs.writeFileSync(
+        path.join(tmpDir, 'package.json'),
+        JSON.stringify({ dependencies: { svelte: '^4.0.0' } }),
+      );
+
+      await ensureProjectInitialized(true);
+
+      const instance = (ConfigManager as unknown as jest.Mock).mock.results[0].value;
+      expect(instance.save).toHaveBeenCalledWith(
+        expect.objectContaining({ framework: 'svelte', type: 'web' }),
+      );
+    });
+
+    it('should detect nest framework from @nestjs/core', async () => {
+      (ProjectStatusManager as jest.Mock).mockImplementation(() => ({
+        isInitialized: jest.fn().mockReturnValue(false),
+      }));
+      fs.writeFileSync(
+        path.join(tmpDir, 'package.json'),
+        JSON.stringify({ dependencies: { '@nestjs/core': '^10.0.0' } }),
+      );
+
+      await ensureProjectInitialized(true);
+
+      const instance = (ConfigManager as unknown as jest.Mock).mock.results[0].value;
+      expect(instance.save).toHaveBeenCalledWith(
+        expect.objectContaining({ framework: 'nest', type: 'enterprise' }),
+      );
+    });
+
+    it('should detect mobile type from @capacitor/core', async () => {
+      (ProjectStatusManager as jest.Mock).mockImplementation(() => ({
+        isInitialized: jest.fn().mockReturnValue(false),
+      }));
+      fs.writeFileSync(
+        path.join(tmpDir, 'package.json'),
+        JSON.stringify({ dependencies: { '@capacitor/core': '^5.0.0' } }),
+      );
+
+      await ensureProjectInitialized(true);
+
+      const instance = (ConfigManager as unknown as jest.Mock).mock.results[0].value;
+      expect(instance.save).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'mobile' }),
+      );
+    });
+
+    it('should detect mobile type from @ionic/core', async () => {
+      (ProjectStatusManager as jest.Mock).mockImplementation(() => ({
+        isInitialized: jest.fn().mockReturnValue(false),
+      }));
+      fs.writeFileSync(
+        path.join(tmpDir, 'package.json'),
+        JSON.stringify({ dependencies: { '@ionic/core': '^7.0.0' } }),
+      );
+
+      await ensureProjectInitialized(true);
+
+      const instance = (ConfigManager as unknown as jest.Mock).mock.results[0].value;
+      expect(instance.save).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'mobile' }),
+      );
+    });
   });
 
   describe('autoConfigureLLM', () => {

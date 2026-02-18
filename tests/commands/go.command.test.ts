@@ -176,6 +176,64 @@ describe('goCommand', () => {
   });
 });
 
+describe('Review mode', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.resetModules();
+  });
+
+  it('should execute two-phase workflow when review is true and user confirms', async () => {
+    jest.doMock('inquirer', () => ({
+      __esModule: true,
+      default: {
+        prompt: jest.fn().mockResolvedValue({ proceed: true })
+      }
+    }));
+
+    await goCommand('Test review project', { review: true });
+
+    expect(workflowCommand).toHaveBeenCalledTimes(2);
+    expect(workflowCommand).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'planning-only' })
+    );
+    expect(workflowCommand).toHaveBeenCalledWith(
+      expect.objectContaining({ resume: true })
+    );
+  });
+
+  it('should stop execution when user rejects specs in review mode', async () => {
+    jest.doMock('inquirer', () => ({
+      __esModule: true,
+      default: {
+        prompt: jest.fn().mockResolvedValue({ proceed: false })
+      }
+    }));
+
+    await goCommand('Test review reject', { review: true });
+
+    expect(workflowCommand).toHaveBeenCalledTimes(1);
+    expect(workflowCommand).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'planning-only' })
+    );
+    expect(log.info).toHaveBeenCalledWith(expect.stringContaining('已停止执行'));
+  });
+
+  it('should use deep-development workflow in review mode with deep option', async () => {
+    jest.doMock('inquirer', () => ({
+      __esModule: true,
+      default: {
+        prompt: jest.fn().mockResolvedValue({ proceed: true })
+      }
+    }));
+
+    await goCommand('Test deep review', { review: true, deep: true });
+
+    expect(workflowCommand).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'deep-development', resume: true })
+    );
+  });
+});
+
 describe('slugify', () => {
   // Access slugify through module internals or test via goCommand behavior
   // Since slugify is internal, we test its behavior through directory naming
@@ -184,10 +242,9 @@ describe('slugify', () => {
     await goCommand('Hello World Project', {});
 
     const dirs = fs.readdirSync(mockTmpDir);
-    const latestDir = dirs[dirs.length - 1];
+    const matchingDir = dirs.find((d) => d.includes('hello-world-project'));
 
-    // Should contain the slugified text
-    expect(latestDir).toMatch(/hello-world-project/i);
+    expect(matchingDir).toBeDefined();
   });
 
   it('should handle Chinese characters in slug', async () => {

@@ -127,4 +127,80 @@ describe('runInitWizard', () => {
     expect(clearSpy).toHaveBeenCalled();
     expect(logSpy).toHaveBeenCalled();
   });
+
+  describe('Project name validation', () => {
+    it('should accept valid project names (lowercase, numbers, hyphens, underscores)', async () => {
+      mockPrompt
+        .mockResolvedValueOnce({ projectName: 'my-app_123', projectType: 'cli' })
+        .mockResolvedValueOnce({ language: 'typescript' })
+        .mockResolvedValueOnce({ features: [], llmProvider: 'claude' });
+
+      await runInitWizard();
+
+      const firstCall = mockPrompt.mock.calls[0][0];
+      const nameConfig = firstCall.find((q: any) => q.name === 'projectName');
+      expect(nameConfig.validate('my-app')).toBe(true);
+      expect(nameConfig.validate('test_123')).toBe(true);
+      expect(nameConfig.validate('ABC')).toBe(true);
+    });
+
+    it('should reject invalid project names (spaces, special chars)', async () => {
+      mockPrompt
+        .mockResolvedValueOnce({ projectName: 'test', projectType: 'cli' })
+        .mockResolvedValueOnce({ language: 'typescript' })
+        .mockResolvedValueOnce({ features: [], llmProvider: 'claude' });
+
+      await runInitWizard();
+
+      const firstCall = mockPrompt.mock.calls[0][0];
+      const nameConfig = firstCall.find((q: any) => q.name === 'projectName');
+      expect(nameConfig.validate('My App!')).toContain('项目名称只能包含');
+      expect(nameConfig.validate('a b c')).toContain('项目名称只能包含');
+      expect(nameConfig.validate('hello@world')).toContain('项目名称只能包含');
+    });
+  });
+
+  describe('Dynamic language choices', () => {
+    it('should return CLI language choices for cli project type', async () => {
+      mockPrompt
+        .mockResolvedValueOnce({ projectName: 'test', projectType: 'cli' })
+        .mockResolvedValueOnce({ language: 'typescript' })
+        .mockResolvedValueOnce({ features: [], llmProvider: 'claude' });
+
+      await runInitWizard();
+
+      const secondCall = mockPrompt.mock.calls[1][0];
+      const langConfig = secondCall.find((q: any) => q.name === 'language');
+      const choices = langConfig.choices({});
+      expect(choices).toEqual(['typescript', 'python', 'cpp', 'go', 'rust']);
+    });
+
+    it('should return API language choices for api project type', async () => {
+      mockPrompt
+        .mockResolvedValueOnce({ projectName: 'test', projectType: 'api' })
+        .mockResolvedValueOnce({ language: 'typescript' })
+        .mockResolvedValueOnce({ features: [], llmProvider: 'claude' });
+
+      await runInitWizard();
+
+      const secondCall = mockPrompt.mock.calls[1][0];
+      const langConfig = secondCall.find((q: any) => q.name === 'language');
+      const choices = langConfig.choices({});
+      expect(choices).toEqual(['typescript', 'python', 'go']);
+    });
+
+    it('should return LIB language choices for lib project type', async () => {
+      mockPrompt
+        .mockResolvedValueOnce({ projectName: 'test', projectType: 'lib' })
+        .mockResolvedValueOnce({ language: 'typescript' })
+        .mockResolvedValueOnce({ features: [], llmProvider: 'claude' });
+
+      await runInitWizard();
+
+      const secondCall = mockPrompt.mock.calls[1][0];
+      const langConfig = secondCall.find((q: any) => q.name === 'language');
+      const choices = langConfig.choices({});
+      expect(choices).toEqual(['typescript', 'python', 'cpp']);
+    });
+  });
 });

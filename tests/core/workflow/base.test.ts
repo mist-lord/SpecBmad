@@ -386,4 +386,48 @@ describe('BaseWorkflow', () => {
       );
     });
   });
+
+  // ─── execute() catch block (unhandled exception from executeSteps) ───
+
+  describe('execute() unhandled exception path', () => {
+    it('should catch exception from executeSteps and return error result', async () => {
+      class ThrowingWorkflow extends BaseWorkflow {
+        getWorkflowId(): string { return 'throw-workflow'; }
+        protected async executeSteps(): Promise<WorkflowStepResult> {
+          throw new Error('executeSteps threw unexpectedly');
+        }
+      }
+
+      const workflow = new ThrowingWorkflow(createConfig({ id: 'throw-wf' }));
+      const errorListener = jest.fn();
+      workflow.on('error', errorListener);
+
+      const result = await workflow.execute();
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('executeSteps threw');
+      expect(workflow.getStatus()).toBe(WorkflowStatus.FAILED);
+      expect(errorListener).toHaveBeenCalledWith(
+        expect.objectContaining({ workflowId: 'throw-wf', error: expect.stringContaining('executeSteps threw') })
+      );
+    });
+
+    it('should handle non-Error exceptions in execute catch block', async () => {
+      class StringThrowingWorkflow extends BaseWorkflow {
+        getWorkflowId(): string { return 'str-throw'; }
+        protected async executeSteps(): Promise<WorkflowStepResult> {
+          throw 'string error message';
+        }
+      }
+
+      const workflow = new StringThrowingWorkflow(createConfig());
+      // Must add 'error' listener to prevent unhandled error from EventEmitter
+      workflow.on('error', jest.fn());
+      const result = await workflow.execute();
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('string error message');
+      expect(workflow.getStatus()).toBe(WorkflowStatus.FAILED);
+    });
+  });
 });
