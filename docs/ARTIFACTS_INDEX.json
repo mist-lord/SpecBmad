@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-18T07:47:15.023Z",
+  "generatedAt": "2026-02-18T13:07:22.488Z",
   "files": [
     {
       "name": "boundary",
@@ -11,25 +11,13 @@
       "name": "llm-dashboard.md",
       "path": "/Users/baijinde/code/SpecBmad/.specbmad/artifacts/llm-dashboard.md",
       "size": 594,
-      "mtime": "2026-02-18T07:47:15.023Z"
+      "mtime": "2026-02-18T13:07:21.949Z"
     },
     {
       "name": "naming",
       "path": "/Users/baijinde/code/SpecBmad/.specbmad/artifacts/naming",
-      "size": 2912,
-      "mtime": "2026-02-18T07:47:14.053Z"
-    },
-    {
-      "name": "workflow-summary-test-1771400835010.md",
-      "path": "/Users/baijinde/code/SpecBmad/.specbmad/artifacts/workflow-summary-test-1771400835010.md",
-      "size": 711,
-      "mtime": "2026-02-18T07:47:15.018Z"
-    },
-    {
-      "name": "workflow-summary-test-1771400835020.json",
-      "path": "/Users/baijinde/code/SpecBmad/.specbmad/artifacts/workflow-summary-test-1771400835020.json",
-      "size": 195,
-      "mtime": "2026-02-18T07:47:15.023Z"
+      "size": 2976,
+      "mtime": "2026-02-18T13:07:21.729Z"
     }
   ]
 }
