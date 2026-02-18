@@ -1,0 +1,58 @@
+[
+  {
+    "text": "SpecBmad 是一个 AI 驱动的软件开发工作流工具。\nSpecBmad is an AI-driven software delivery workflow.",
+    "startMs": 0,
+    "endMs": 4665,
+    "timestampMs": null,
+    "confidence": null
+  },
+  {
+    "text": "它让分析、架构、开发、测试协同推进，并以门禁保障质量。\nIt aligns analysis, architecture, development, and QA with quality gates.",
+    "startMs": 4665,
+    "endMs": 9330,
+    "timestampMs": null,
+    "confidence": null
+  },
+  {
+    "text": "内置变更管理与报告，让交付透明可追溯。\nChange management and reports keep every step traceable.",
+    "startMs": 9330,
+    "endMs": 13995,
+    "timestampMs": null,
+    "confidence": null
+  },
+  {
+    "text": "支持 TypeScript、Python 和 C++。\nTypeScript, Python, and C plus plus are supported.",
+    "startMs": 13995,
+    "endMs": 18659,
+    "timestampMs": null,
+    "confidence": null
+  },
+  {
+    "text": "SpecBmad 是一个 AI 驱动的软件开发工作流工具。\nSpecBmad is an AI-driven software delivery workflow.",
+    "startMs": 18659,
+    "endMs": 22572,
+    "timestampMs": null,
+    "confidence": null
+  },
+  {
+    "text": "它让分析、架构、开发、测试协同推进，并以门禁保障质量。\nIt aligns analysis, architecture, development, and QA with quality gates.",
+    "startMs": 22572,
+    "endMs": 26485,
+    "timestampMs": null,
+    "confidence": null
+  },
+  {
+    "text": "内置变更管理与报告，让交付透明可追溯。\nChange management and reports keep every step traceable.",
+    "startMs": 26485,
+    "endMs": 30398,
+    "timestampMs": null,
+    "confidence": null
+  },
+  {
+    "text": "支持 TypeScript、Python 和 C++。\nTypeScript, Python, and C plus plus are supported.",
+    "startMs": 30398,
+    "endMs": 34311,
+    "timestampMs": null,
+    "confidence": null
+  }
+]

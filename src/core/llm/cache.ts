@@ -19,7 +19,7 @@ export class LLMCache {
   private persistEnabled: boolean = process.env.NODE_ENV !== 'test';
 
   constructor() {
-    try { this.config.load(); } catch {}
+    try { this.config.load(); } catch { /* use defaults */ }
     const baseDir = path.join(process.cwd(), this.config.get('cacheDir') || '.specbmad/cache');
     this.cacheDir = baseDir;
     this.cacheFile = path.join(baseDir, 'llm.json');

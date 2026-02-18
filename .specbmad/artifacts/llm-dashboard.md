@@ -2,9 +2,9 @@
 
 ## 概览
 - 总调用数: 2
-- Tokens In: 229
+- Tokens In: 377
 - Tokens Out: 90
-- Tokens Total: 319
+- Tokens Total: 467
 - 平均延迟(ms): 0
 - 估算成本(USD): 0
 - 缓存命中率(%): 100
@@ -15,9 +15,10 @@
 ## 按代理
 | 代理 | 调用数 | Tokens In | Tokens Out | 成本(USD) | 平均延迟(ms) |
 |---|---:|---:|---:|---:|---:|
-| ScrumMaster | 2 | 229 | 90 | 0 | 0 |
+| Analyst | 1 | 183 | 45 | 0 | 0 |
+| Architect | 1 | 194 | 45 | 0 | 0 |
 
 ## 按模型
 | 模型 | 调用数 | Tokens In | Tokens Out | 成本(USD) | 平均延迟(ms) |
 |---|---:|---:|---:|---:|---:|
-| unknown | 2 | 229 | 90 | 0 | 0 |
+| unknown | 2 | 377 | 90 | 0 | 0 |

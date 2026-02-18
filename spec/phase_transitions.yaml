@@ -1,52 +1,46 @@
-# Phase 迁移配置（冻结版规范）
-# 
-# 本文件定义 Phase 0-5 的迁移规则和 Gate
+# Phase 迁移配置（4-Phase MVP）
+#
+# 本文件定义 Phase 0-3 的迁移规则和 Gate
 # Phase Controller 必须以本文件作为唯一迁移依据
+#
+# 简化说明：
+# - 原 Phase 0 (Intent) + Phase 1 (Formal Spec) → Phase 0 (Capture)
+# - 原 Phase 2 (Architecture) → Phase 1 (Design)
+# - 原 Phase 3 (Implementation) → Phase 2 (Build)
+# - 原 Phase 4 (Verification) + Phase 5 (Iteration) → Phase 3 (Review)
 
 phases:
   0:
-    # Phase 0: Intent Capture
-    # 工具: Spec-Kit
-    # 产物: Intent Spec
+    # Phase 0: Capture (需求捕获)
+    # 工具: Spec-Kit + Analyst Agent
+    # 产物: intent.yaml (结构化需求)
+    name: capture
     next: [1]
     gates: []
-  
+
   1:
-    # Phase 1: Formal Specification
-    # 工具: OpenSpec
-    # 产物: Formal Spec
-    # Gate: OpenSpec 校验必须通过
+    # Phase 1: Design (架构设计)
+    # 工具: Architect Agent + BMAD 头脑风暴
+    # 产物: architecture.md, plan.yaml
+    name: design
     next: [2]
-    gates:
-      - openspec_passed
-  
-  2:
-    # Phase 2: Architecture & Planning
-    # 工具: BMAD (PM / Architect)
-    # 产物: Plan / Architecture
-    next: [3]
-    gates: []
-  
-  3:
-    # Phase 3: Implementation
-    # 工具: BMAD-DEV + DeepCode
-    # 产物: Code
-    # Gate: DeepCode 校验必须通过
-    next: [4]
-    gates:
-      - deepcode_passed
-  
-  4:
-    # Phase 4: Verification
-    # 工具: OpenSpec + DeepCode
-    # 产物: Verification Report
-    next: [5]
-    gates:
-      - verification_passed
-  
-  5:
-    # Phase 5: Iteration / Evolution
-    # 可以回退到 Phase 1 或 Phase 3
-    next: [1, 3]
     gates: []
 
+  2:
+    # Phase 2: Build (实现)
+    # 工具: Developer Agent
+    # 产物: code/*
+    name: build
+    next: [3]
+    gates: []
+
+  3:
+    # Phase 3: Review (验收)
+    # 工具: QA Agent
+    # 产物: review_report.md
+    # Gate: QA 验收通过
+    # 可回退到 Phase 0 (重新捕获需求) 或 Phase 2 (修复实现)
+    name: review
+    next: [0, 2]
+    gates:
+      - review_passed

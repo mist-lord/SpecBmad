@@ -19,19 +19,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8.15.6
+          run_install: false
       - name: Setup Node ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'pnpm'
-      - name: Enable Corepack & activate pnpm
-        run: |
-          corepack enable
-<<<<<<< HEAD
-          corepack prepare pnpm@10.20.0 --activate
-=======
-          corepack prepare pnpm@9.15.4 --activate
->>>>>>> origin/main
       - name: Install deps
         run: pnpm install --frozen-lockfile
       - name: Lint
@@ -113,19 +110,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8.15.6
+          run_install: false
       - name: Setup Node 18.x
         uses: actions/setup-node@v4
         with:
           node-version: 18.x
           cache: 'pnpm'
-      - name: Enable Corepack & activate pnpm
-        run: |
-          corepack enable
-<<<<<<< HEAD
-          corepack prepare pnpm@10.20.0 --activate
-=======
-          corepack prepare pnpm@9.15.4 --activate
->>>>>>> origin/main
       - name: Install deps
         run: pnpm install --frozen-lockfile
       - name: Build

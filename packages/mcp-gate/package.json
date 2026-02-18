@@ -1,0 +1,44 @@
+{
+  "name": "@specbmad/mcp-gate",
+  "version": "0.1.0",
+  "description": "SpecBmad Gate Verification MCP Server - Integrate with Claude Code, Cursor, and other MCP-compatible tools",
+  "main": "dist/server.js",
+  "bin": {
+    "specbmad-mcp-gate": "dist/server.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/server.ts",
+    "start": "node dist/server.js",
+    "test": "jest --config jest.config.js"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "specbmad",
+    "verification",
+    "gate",
+    "ai-coding"
+  ],
+  "author": "SpecBmad Maintainers",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24.9.2",
+    "typescript": "^5.2.2",
+    "ts-node": "^10.9.1"
+  },
+  "peerDependencies": {
+    "speckit-bmad": "^0.1.0"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

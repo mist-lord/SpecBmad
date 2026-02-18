@@ -4,7 +4,7 @@ import { contextManager } from '@/core/context/manager';
 import { promptEngine } from '@/core/prompt/engine';
 import { llmCache } from '@/core/llm/cache';
 import { llmConcurrency } from '@/core/llm/concurrency';
-import { llmManager } from '@/core/llm/manager';
+import { llmManager as _llmManager } from '@/core/llm/manager';
 import { LLMClientFactory } from '@/core/llm/base';
 
 /**
@@ -120,7 +120,7 @@ export abstract class BaseAgent implements Agent {
       try {
         const cacheKey = llmCache.makeKey(prompt, fullOptions);
         llmCache.set(cacheKey, response);
-      } catch {}
+      } catch { /* ignore cache errors */ }
 
       return response;
     } catch (error) {
@@ -170,7 +170,7 @@ Your task is to provide professional, accurate, and actionable output based on y
       const next = Array.isArray(obj.nextSteps) ? obj.nextSteps : [];
       const combined = [...actions, ...next].filter(Boolean);
       if (combined.length > 0) return combined.slice(0, 10);
-    } catch {}
+    } catch { /* not JSON, fall through to text parsing */ }
 
     // 退化为从 Markdown/纯文本中提取带列表标记的行
     const lines = output.split('\n').map((l) => l.trim());

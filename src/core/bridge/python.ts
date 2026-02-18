@@ -1,13 +1,18 @@
 /**
- * Python 桥接层
- * 
- * 调用 Python 脚本（Spec-Kit, OpenSpec, DeepCode）
- * 处理 Python 输出（YAML/JSON）
- * 错误处理和超时控制
+ * @deprecated 4-Phase MVP 不再依赖 Python 桥接
+ *
+ * 此文件保留用于向后兼容，但在 4-Phase MVP 中不会被调用。
+ * Spec-Kit 已重写为纯 TypeScript 实现。
+ *
+ * 原功能说明：
+ * - Python 桥接层
+ * - 调用 Python 脚本（Spec-Kit, OpenSpec, DeepCode）
+ * - 处理 Python 输出（YAML/JSON）
+ * - 错误处理和超时控制
  */
 
 import { log } from '@/utils/logger';
-import path from 'path';
+import _path from 'path';
 import fs from 'fs';
 
 export interface PythonBridgeOptions {

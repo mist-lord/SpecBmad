@@ -1,16 +1,13 @@
 {
-  "workflow": "planning-only",
+  "workflow": "design-only",
   "steps": [
     {
-      "agent": "ScrumMaster",
-      "mode": "plan",
-      "prioritize": false,
+      "agent": "Analyst",
+      "mode": "brief",
       "nextSteps": []
     },
     {
-      "agent": "ScrumMaster",
-      "mode": "refine",
-      "prioritize": false,
+      "agent": "Architect",
       "nextSteps": []
     }
   ]

@@ -38,15 +38,16 @@ describe('workflow command boundary cases', () => {
   test('falls back to json when format is invalid', async () => {
     const reportDir = path.join(getProjectPath(PATHS.ARTIFACTS_DIR), 'boundary');
     fs.mkdirSync(reportDir, { recursive: true });
+    // 4-Phase MVP: use 'design-only' workflow instead of deleted 'planning-only'
     // 测试：传入无效格式 'invalid'，应该回退到 json
-    await workflowCommand({ name: 'planning-only', format: 'invalid' as any, reportDir, dedupe: false, datePrefix: false } as any);
+    await workflowCommand({ name: 'design-only', format: 'invalid' as any, reportDir, dedupe: false, datePrefix: false } as any);
     // 检查目录中是否有 workflow.json 文件
     const files = fs.readdirSync(reportDir).filter(f => f.startsWith('workflow') && f.endsWith('.json'));
     expect(files.length).toBeGreaterThan(0);
     const outPath = path.join(reportDir, files[0]);
     expect(fs.existsSync(outPath)).toBe(true);
     const obj = JSON.parse(fs.readFileSync(outPath, 'utf-8'));
-    expect(obj.workflow).toBe('planning-only');
+    expect(obj.workflow).toBe('design-only');
     expect(Array.isArray(obj.steps)).toBe(true);
   });
 
@@ -77,7 +78,8 @@ describe('workflow command boundary cases', () => {
     }));
 
     const { workflowCommand: wf } = await import('@/commands/workflow');
-    await expect(wf({ name: 'planning-only', format: 'json', reportDir: PATHS.ARTIFACTS_DIR } as any))
+    // 4-Phase MVP: use 'design-only' workflow instead of deleted 'planning-only'
+    await expect(wf({ name: 'design-only', format: 'json', reportDir: PATHS.ARTIFACTS_DIR } as any))
       .rejects.toThrow(/未找到可用的默认 LLM 客户端/);
 
     // Restore module mocks
